@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ledger</title>
+<style>
+  :root{
+    --ink:#1c231f;
+    --green-900:#1f3b2c;
+    --green-800:#264835;
+    --green-700:#2f5940;
+    --cream:#f3efe4;
+    --card:#ffffff;
+    --line:#e7e1d2;
+    --muted:#8a8578;
+    --mint:#e3ede2;
+    --mint-ink:#2f5940;
+    --danger:#a4432f;
+    --radius-lg:22px;
+    --radius-md:16px;
+    --radius-pill:999px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--cream);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .app{
+    max-width:480px;
+    margin:0 auto;
+    padding:20px 16px 100px;
+    min-height:100vh;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .ledger-name{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+  .ledger-name h1{
+    font-size:26px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .ledger-switch{
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:14px;
+    padding:4px;
+  }
+  .icon-btn{
+    width:38px;height:38px;
+    border-radius:var(--radius-pill);
+    border:1px solid var(--line);
+    background:var(--card);
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+    color:var(--ink);
+    cursor:pointer;
+  }
+
+  .tabs{
+    display:flex;
+    background:var(--card);
+    border-radius:var(--radius-pill);
+    padding:5px;
+    margin-bottom:14px;
+    border:1px solid var(--line);
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:11px 0;
+    border-radius:var(--radius-pill);
+    font-size:15px;
+    font-weight:600;
+    background:transparent;
+    border:none;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .tab.active{
+    background:var(--green-800);
+    color:#fff;
+  }
+
+  .months{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:4px;
+    margin-bottom:14px;
+    scrollbar-width:none;
+  }
+  .months::-webkit-scrollbar{display:none;}
+  .month-chip{
+    flex:0 0 auto;
+    padding:10px 18px;
+    border-radius:var(--radius-pill);
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  .month-chip.active{
+    background:var(--green-800);
+    color:#fff;
+    border-color:var(--green-800);
+  }
+
+  .search{
+    width:100%;
+    padding:14px 16px;
+    border-radius:var(--radius-md);
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:15px;
+    margin-bottom:14px;
+    color:var(--ink);
+  }
+  .search::placeholder{color:var(--muted);}
+
+  .filters{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    margin-bottom:16px;
+    scrollbar-width:none;
+  }
+  .filters::-webkit-scrollbar{display:none;}
+  .filter-chip{
+    flex:0 0 auto;
+    padding:9px 16px;
+    border-radius:var(--radius-pill);
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink);
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  .filter-chip.active{
+    background:var(--green-900);
+    color:#fff;
+    border-color:var(--green-900);
+  }
+
+  .totals{
+    background:var(--green-900);
+    border-radius:var(--radius-lg);
+    padding:20px;
+    display:flex;
+    color:#fff;
+    margin-bottom:20px;
+  }
+  .totals .col{flex:1;}
+  .totals .col + .col{
+    border-left:1px solid rgba(255,255,255,0.18);
+    padding-left:20px;
+    margin-left:20px;
+  }
+  .totals .label{
+    font-size:12.5px;
+    color:#c9d6ca;
+    margin-bottom:6px;
+    letter-spacing:0.02em;
+  }
+  .totals .value{
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+
+  .entries-meta{
+    color:var(--muted);
+    font-size:14px;
+    margin-bottom:12px;
+  }
+
+  .entry{
+    background:var(--card);
+    border-radius:var(--radius-lg);
+    padding:18px;
+    margin-bottom:12px;
+    border:1px solid var(--line);
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .entry-check{
+    width:22px; height:22px;
+    margin-top:2px;
+    accent-color:var(--green-800);
+    flex-shrink:0;
+  }
+  .entry-body{ flex:1; min-width:0; }
+  .selection-bar{
+    display:none;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--green-900);
+    color:#fff;
+    border-radius:14px;
+    padding:12px 16px;
+    margin-bottom:14px;
+    font-size:14px;
+    font-weight:600;
+  }
+  .selection-bar.show{ display:flex; }
+  .selection-bar button{
+    background:#fff;
+    color:var(--green-900);
+    border:none;
+    border-radius:10px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:700;
+  }
+  .selection-bar .clear-link{
+    background:none;
+    color:#cfe0d0;
+    font-weight:600;
+    text-decoration:underline;
+    padding:8px 6px;
+  }
+  .entry-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:4px;
+  }
+  .entry-name{
+    font-size:19px;
+    font-weight:700;
+  }
+  .entry-amount{
+    font-size:19px;
+    font-weight:700;
+  }
+  .entry-sub{
+    display:flex;
+    justify-content:space-between;
+    color:var(--muted);
+    font-size:14px;
+    font-weight:400;
+    margin-bottom:12px;
+  }
+  .entry-profit{
+    color:var(--green-700);
+    font-weight:600;
+  }
+  .entry-tags{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .tag{
+    background:var(--mint);
+    color:var(--mint-ink);
+    font-size:13px;
+    font-weight:600;
+    padding:7px 12px;
+    border-radius:var(--radius-pill);
+  }
+  .tag.unpaid{
+    background:#f3e3df;
+    color:var(--danger);
+  }
+
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    padding:60px 20px;
+    font-size:15px;
+    line-height:1.5;
+  }
+
+  .fab{
+    position:fixed;
+    bottom:28px;
+    right:50%;
+    transform:translateX(240px);
+    width:58px;height:58px;
+    border-radius:50%;
+    background:var(--green-800);
+    color:#fff;
+    border:none;
+    font-size:28px;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 20px rgba(31,59,44,0.35);
+    cursor:pointer;
+  }
+  @media (max-width:480px){
+    .fab{ right:24px; transform:none; }
+  }
+
+  /* modal */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(20,24,20,0.45);
+    display:none;
+    align-items:flex-end;
+    z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .sheet{
+    background:var(--cream);
+    width:100%;
+    max-width:480px;
+    margin:0 auto;
+    border-radius:24px 24px 0 0;
+    padding:22px 18px 26px;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .sheet h2{
+    margin:0 0 16px;
+    font-size:20px;
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:6px;
+    font-weight:600;
+  }
+  .field input, .field select{
+    width:100%;
+    padding:13px 14px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:15px;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  .row2{display:flex; gap:10px;}
+  .row2 .field{flex:1;}
+  .checks{display:flex; gap:10px; margin-bottom:6px;}
+  .check-chip{
+    flex:1;
+    padding:12px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:var(--card);
+    text-align:center;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .check-chip.on{
+    background:var(--mint);
+    border-color:var(--green-700);
+    color:var(--mint-ink);
+  }
+  .item-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-bottom:8px;
+  }
+  .item-row input{
+    padding:10px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:14px;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  .item-row .item-desc{ flex:2; min-width:0; }
+  .item-row .item-qty{ width:52px; text-align:center; }
+  .item-row .item-price{ width:72px; text-align:right; }
+  .item-row .item-line-total{
+    width:72px;
+    text-align:right;
+    font-size:13px;
+    font-weight:600;
+    color:var(--green-700);
+    flex-shrink:0;
+  }
+  .item-row .item-remove{
+    width:24px; height:24px;
+    border-radius:50%;
+    border:none;
+    background:#f3e3df;
+    color:var(--danger);
+    font-size:14px;
+    line-height:1;
+    flex-shrink:0;
+    cursor:pointer;
+  }
+  .sheet-actions{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  .btn{
+    flex:1;
+    padding:15px;
+    border-radius:14px;
+    border:none;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--green-800); color:#fff;}
+  .btn-secondary{background:var(--card); color:var(--ink); border:1px solid var(--line);}
+  .btn-danger{background:#fff; color:var(--danger); border:1px solid #ecd3cc;}
+
+  .switcher-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:var(--card);
+    margin-bottom:10px;
+    cursor:pointer;
+  }
+  .switcher-item.active{
+    border-color:var(--green-700);
+    background:var(--mint);
+  }
+  .switcher-name{font-weight:700; font-size:15px;}
+  .switcher-del{
+    color:var(--danger);
+    font-size:13px;
+    font-weight:600;
+    background:none;
+    border:none;
+    padding:6px;
+  }
+  .status-msg{
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    padding:8px 0 0;
+  }
+  .invoice-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  .invoice-row:last-child{ border-bottom:none; }
+  .invoice-row input[type="checkbox"]{
+    width:20px; height:20px;
+    accent-color:var(--green-800);
+    flex-shrink:0;
+  }
+  .invoice-row .invoice-info{
+    flex:1;
+    font-size:13.5px;
+    font-weight:600;
+  }
+  .invoice-row .invoice-amount{
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--green-700);
+  }
+  .dialog-overlay{
+    position:fixed; inset:0;
+    background:rgba(20,24,20,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:24px;
+  }
+  .dialog-overlay.show{display:flex;}
+  .dialog-box{
+    background:var(--cream);
+    border-radius:20px;
+    padding:22px;
+    width:100%;
+    max-width:340px;
+  }
+  .dialog-box p{
+    margin:0 0 18px;
+    font-size:15px;
+    line-height:1.5;
+    color:var(--ink);
+  }
+  .dialog-actions{
+    display:flex;
+    gap:10px;
+  }
+  .dialog-actions.stacked{
+    flex-direction:column;
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="ledger-name">
+      <h1 id="ledgerTitle">Ledger</h1>
+      <button class="ledger-switch" onclick="openSwitcher()">▾</button>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="icon-btn" onclick="openStatement()" title="Generate statement">📄</button>
+      <button class="icon-btn" onclick="openSwitcher()" title="Switch ledger">☰</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tabLedger" onclick="setView('ledger')">Ledger</button>
+    <button class="tab" id="tabYearly" onclick="setView('yearly')">Yearly summary</button>
+  </div>
+
+  <div id="ledgerView">
+    <div class="months" id="monthRow"></div>
+
+    <input class="search" id="searchInput" placeholder="Search dealer or invoice number" oninput="render()">
+
+    <div class="filters" id="filterRow">
+      <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">All</button>
+      <button class="filter-chip" data-filter="dealer_unpaid" onclick="setFilter('dealer_unpaid')">Dealer unpaid</button>
+      <button class="filter-chip" data-filter="dealer_paid" onclick="setFilter('dealer_paid')">Dealer paid</button>
+      <button class="filter-chip" data-filter="com_unpaid" onclick="setFilter('com_unpaid')">Com unpaid</button>
+      <button class="filter-chip" data-filter="com_paid" onclick="setFilter('com_paid')">Com paid</button>
+    </div>
+
+    <div class="totals">
+      <div class="col">
+        <div class="label">TOTAL INVOICED</div>
+        <div class="value" id="totalInvoiced">RM 0</div>
+      </div>
+      <div class="col">
+        <div class="label">TOTAL PROFIT</div>
+        <div class="value" id="totalProfit">RM 0</div>
+      </div>
+    </div>
+
+    <div class="entries-meta" id="entriesMeta">0 entries</div>
+    <div class="selection-bar" id="selectionBar">
+      <span id="selectionCount">0 selected</span>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="clear-link" onclick="clearEntrySelection()">Clear</button>
+        <button onclick="generateStatementFromSelection()">Make statement</button>
+      </div>
+    </div>
+    <div id="entriesList"></div>
+  </div>
+
+  <div id="yearlyView" style="display:none;">
+    <div id="yearlyList"></div>
+  </div>
+
+</div>
+
+<button class="fab" onclick="openEntryForm()">+</button>
+
+<!-- Add/Edit Entry Sheet -->
+<div class="overlay" id="entryOverlay">
+  <div class="sheet">
+    <h2 id="entryFormTitle">Add entry</h2>
+    <div class="field">
+      <label>Dealer name</label>
+      <input id="fDealer" placeholder="e.g. Pc planet" autocomplete="off" autocorrect="off" name="dealer-name-field">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Invoice number</label>
+        <input id="fInvoice" placeholder="Sv0626-001" autocomplete="off" autocorrect="off">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input id="fDate" type="date" onchange="autofillInvoiceNumber()">
+      </div>
+    </div>
+
+    <label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600;">Items (optional)</label>
+    <div id="itemsHeader" style="display:none; gap:8px; font-size:11px; color:var(--muted); font-weight:600; padding:0 2px 4px;">
+      <div style="flex:2;">Description</div>
+      <div style="width:52px; text-align:center;">Qty</div>
+      <div style="width:72px; text-align:right;">Unit price</div>
+      <div style="width:72px; text-align:right;">Total</div>
+      <div style="width:24px;"></div>
+    </div>
+    <div id="itemRowsContainer" style="margin-bottom:8px;"></div>
+    <button type="button" class="btn btn-secondary" style="width:100%; margin-bottom:16px;" onclick="addItemRow()">+ Add item</button>
+
+    <div class="row2">
+      <div class="field">
+        <label>Invoiced amount (RM)</label>
+        <input id="fAmount" type="number" inputmode="decimal" placeholder="0">
+      </div>
+      <div class="field">
+        <label>Profit (RM)</label>
+        <input id="fProfit" type="number" inputmode="decimal" placeholder="0">
+      </div>
+    </div>
+    <label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600;">Status</label>
+    <div class="checks">
+      <div class="check-chip" id="chipDealerPaid" onclick="toggleChip('dealerPaid')">Dealer paid</div>
+      <div class="check-chip" id="chipComPaid" onclick="toggleChip('comPaid')">Com paid</div>
+    </div>
+    <div class="row2" style="margin-bottom:14px;">
+      <div class="field" id="dealerPaidDateField" style="display:none; margin-bottom:0;">
+        <label>Dealer paid date</label>
+        <input id="fDealerPaidDate" type="date">
+      </div>
+      <div class="field" id="comPaidDateField" style="display:none; margin-bottom:0;">
+        <label>Com paid date</label>
+        <input id="fComPaidDate" type="date">
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" onclick="closeEntryForm()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry()">Save</button>
+    </div>
+    <button class="btn btn-danger" id="deleteBtn" style="margin-top:10px;display:none;width:100%;" onclick="deleteEntry()">Delete entry</button>
+  </div>
+</div>
+
+<!-- Ledger switcher sheet -->
+<div class="overlay" id="switcherOverlay">
+  <div class="sheet">
+    <h2>Your ledgers</h2>
+    <div id="switcherList"></div>
+    <div class="field" style="margin-top:6px;">
+      <label>New ledger name</label>
+      <input id="newLedgerName" placeholder="e.g. Personal expenses">
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" onclick="closeSwitcher()">Close</button>
+      <button class="btn btn-primary" onclick="createLedger()">Create ledger</button>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" onclick="exportBackup()">Backup to file</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('restoreFile').click()">Restore from file</button>
+    </div>
+    <input type="file" id="restoreFile" accept="application/json" style="display:none;" onchange="importBackup(event)">
+    <button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="renumberInvoices()">Renumber invoices</button>
+    <div class="status-msg" id="storageStatus"></div>
+  </div>
+</div>
+
+<!-- Company / bank info sheet -->
+<div class="overlay" id="companyOverlay">
+  <div class="sheet">
+    <h2>Letterhead &amp; bank details</h2>
+    <div class="field">
+      <label>Company name</label>
+      <input id="ciName">
+    </div>
+    <div class="field">
+      <label>Registration number</label>
+      <input id="ciRegNo">
+    </div>
+    <div class="field">
+      <label>Address line 1</label>
+      <input id="ciAddr1">
+    </div>
+    <div class="field">
+      <label>Address line 2</label>
+      <input id="ciAddr2">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Phone</label>
+        <input id="ciPhone">
+      </div>
+      <div class="field">
+        <label>Fax</label>
+        <input id="ciFax">
+      </div>
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input id="ciEmail">
+    </div>
+    <div class="field">
+      <label>Bank account name</label>
+      <input id="ciBankAccName">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Bank name</label>
+        <input id="ciBankName">
+      </div>
+      <div class="field">
+        <label>Account number</label>
+        <input id="ciBankAccNo">
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" onclick="closeCompanyInfo()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCompanyInfo()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Statement Sheet -->
+<div class="overlay" id="statementOverlay">
+  <div class="sheet">
+    <h2>Dealer statement</h2>
+    <div class="field">
+      <label>Dealer</label>
+      <select id="stDealer" onchange="onDealerChange()"></select>
+    </div>
+    <div class="field">
+      <label>Period</label>
+      <select id="stPeriod" onchange="onPeriodChange()">
+        <option value="all">All time</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Select invoices to include</label>
+      <div id="stInvoiceList" style="max-height:220px; overflow-y:auto; border:1px solid var(--line); border-radius:14px; background:var(--card); padding:6px;"></div>
+    </div>
+    <button class="ledger-switch" id="toggleCustomerDetailsBtn" style="text-align:left; padding:0 0 10px; font-size:14px; text-decoration:underline;" onclick="toggleCustomerDetails()">Customer &amp; statement details</button>
+    <div id="customerDetailsFields" style="display:none;">
+      <div class="field">
+        <label>Customer address (line 1)</label>
+        <input id="stCustAddr1" oninput="renderStatementPreview()" placeholder="e.g. 12, Jalan Kundang 2,">
+      </div>
+      <div class="field">
+        <label>Customer address (line 2)</label>
+        <input id="stCustAddr2" oninput="renderStatementPreview()" placeholder="e.g. 83000 Batu Pahat, Johor">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Attention</label>
+          <input id="stAttention" oninput="renderStatementPreview()" placeholder="e.g. Ms Koh">
+        </div>
+        <div class="field">
+          <label>Customer account no.</label>
+          <input id="stAccountNo" oninput="renderStatementPreview()" placeholder="e.g. 300-D0001">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Sales executive</label>
+          <input id="stSalesExec" oninput="renderStatementPreview()" placeholder="e.g. William">
+        </div>
+        <div class="field">
+          <label>Currency</label>
+          <input id="stCurrency" oninput="renderStatementPreview()" placeholder="RM">
+        </div>
+      </div>
+      <div class="field">
+        <label>Terms</label>
+        <input id="stTerms" oninput="renderStatementPreview()" placeholder="30 Days">
+      </div>
+    </div>
+    <div id="statementPreview" style="max-height:340px; overflow-y:auto; margin-bottom:14px;"></div>
+    <button class="ledger-switch" style="text-align:left; padding:0 0 14px; font-size:14px; text-decoration:underline;" onclick="openCompanyInfo()">Edit letterhead &amp; bank details</button>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" onclick="closeStatement()">Close</button>
+      <button class="btn btn-primary" onclick="generateStatementPDF('download')">Save PDF</button>
+    </div>
+    <button class="btn btn-primary" id="shareStatementBtn" style="margin-top:10px; width:100%; background:#25D366;" onclick="generateStatementPDF('share')">Share via WhatsApp</button>
+    <div class="status-msg" id="statementStatus"></div>
+  </div>
+</div>
+
+<div class="dialog-overlay" id="dialogOverlay">
+  <div class="dialog-box">
+    <p id="dialogMessage"></p>
+    <div class="dialog-actions" id="dialogActions"></div>
+  </div>
+</div>
+
+<script>
+let state = {
+  ledgers: {},      // id -> {name, entries:[]}
+  currentLedgerId: null,
+  view: 'ledger',
+  filter: 'all',
+  selectedMonth: null,
+  editingEntryId: null,
+  chipDealerPaid: false,
+  chipComPaid: false,
+  selectedInvoiceIds: null,
+  selectedEntryIds: new Set(),
+  dealerProfiles: {},
+  companyInfo: {
+    name: 'SV ADVANCE TECHNOLOGY RESOURCES',
+    regNo: '002612386-P',
+    addressLine1: '52-1, JALAN PUTERI 7/7, BANDAR PUTERI,',
+    addressLine2: '47100 PUCHONG, SELANGOR,',
+    phone: '012-6116021',
+    fax: '03-80624162',
+    email: 'petersekmy@yahoo.com',
+    bankAccountName: 'SV ADVANCE TECHNOLOGY RESOURCES',
+    bankName: 'HONG LEONG BANK',
+    bankAccountNumber: '2140 0043 161'
+  },
+};
+
+function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+
+// --- Global error surface: never fail silently again ---
+function showGlobalError(msg){
+  let banner = document.getElementById('globalErrorBanner');
+  if(!banner){
+    banner = document.createElement('div');
+    banner.id = 'globalErrorBanner';
+    banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#7a2e20;color:#fff;padding:12px 16px;font-size:13px;z-index:99999;line-height:1.4;';
+    document.body.appendChild(banner);
+  }
+  banner.textContent = 'Something went wrong: ' + msg + ' (tap to dismiss)';
+  banner.onclick = ()=> banner.remove();
+}
+window.addEventListener('error', function(e){
+  const loc = (e.filename ? ' @' + e.filename.split('/').pop() + ':' + e.lineno + ':' + e.colno : '');
+  const stack = e.error && e.error.stack ? ' | ' + e.error.stack.split('\n').slice(0,3).join(' > ') : '';
+  showGlobalError((e.message || 'unknown script error') + loc + stack);
+});
+window.addEventListener('unhandledrejection', function(e){
+  const reason = e.reason;
+  const stack = reason && reason.stack ? ' | ' + reason.stack.split('\n').slice(0,3).join(' > ') : '';
+  showGlobalError((reason && reason.message ? reason.message : String(reason)) + stack);
+});
+
+// --- Custom dialog (replaces alert/confirm, which sandboxed previews can block) ---
+function showDialog(message, buttons){
+  document.getElementById('dialogMessage').textContent = message;
+  const actions = document.getElementById('dialogActions');
+  actions.innerHTML = '';
+  actions.className = 'dialog-actions' + (buttons.length > 2 ? ' stacked' : '');
+  buttons.forEach(b=>{
+    const btn = document.createElement('button');
+    btn.className = 'btn ' + (b.style || 'btn-secondary');
+    btn.textContent = b.label;
+    btn.onclick = ()=>{
+      document.getElementById('dialogOverlay').classList.remove('show');
+      if(b.onClick) b.onClick();
+    };
+    actions.appendChild(btn);
+  });
+  document.getElementById('dialogOverlay').classList.add('show');
+}
+function showAlert(message){
+  showDialog(message, [{label:'OK', style:'btn-primary'}]);
+}
+function showConfirm(message, onConfirm){
+  showDialog(message, [
+    {label:'Cancel', style:'btn-secondary'},
+    {label:'Confirm', style:'btn-primary', onClick:onConfirm}
+  ]);
+}
+
+function monthKey(dateStr){
+  const d = new Date(dateStr);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function monthLabel(key){
+  const [y,m] = key.split('-').map(Number);
+  const d = new Date(y, m-1, 1);
+  return d.toLocaleString('en-US', {month:'short'}) + ' ' + String(y).slice(2);
+}
+function fmtMoney(n){
+  n = Math.round(Number(n)||0);
+  return 'RM ' + n.toLocaleString('en-US');
+}
+function fmtDate(dateStr){
+  const d = new Date(dateStr);
+  return d.getDate() + ' ' + d.toLocaleString('en-US',{month:'short'});
+}
+
+let dbApi = null;
+
+async function loadState(){
+  dbApi = await claude.use('db');
+  if(dbApi){
+    try{
+      const snap = await dbApi.doc('ledgers/main').get();
+      if(snap.exists){
+        const parsed = JSON.parse(JSON.stringify(snap.data()));
+        state.ledgers = parsed.ledgers || {};
+        state.currentLedgerId = parsed.currentLedgerId || null;
+      }
+    }catch(e){
+      // no data yet
+    }
+    try{
+      const snap2 = await dbApi.doc('company/info').get();
+      if(snap2.exists){
+        state.companyInfo = Object.assign({}, state.companyInfo, JSON.parse(JSON.stringify(snap2.data())));
+      }else{
+        await dbApi.doc('company/info').set(state.companyInfo);
+      }
+    }catch(e){
+      // keep defaults
+    }
+    try{
+      const snap3 = await dbApi.doc('dealers/profiles').get();
+      if(snap3.exists){
+        const parsed3 = JSON.parse(JSON.stringify(snap3.data()));
+        state.dealerProfiles = parsed3.profiles || {};
+      }
+    }catch(e){
+      // no dealer profiles yet
+    }
+  }else{
+    setStatus('Storage unavailable in this view — changes will not be saved.');
+  }
+  if(Object.keys(state.ledgers).length === 0){
+    const id = uid('ledger');
+    state.ledgers[id] = { name:'Ledger', entries:[] };
+    state.currentLedgerId = id;
+    await persist();
+  }
+  if(!state.currentLedgerId || !state.ledgers[state.currentLedgerId]){
+    state.currentLedgerId = Object.keys(state.ledgers)[0];
+  }
+  render();
+}
+
+async function persist(){
+  if(!dbApi){
+    setStatus('Storage unavailable in this view — changes will not be saved.');
+    return;
+  }
+  try{
+    await dbApi.doc('ledgers/main').set({
+      ledgers: state.ledgers,
+      currentLedgerId: state.currentLedgerId
+    });
+    setStatus('');
+  }catch(e){
+    setStatus('Could not save — check connection.');
+  }
+}
+
+function setStatus(msg){
+  const el = document.getElementById('storageStatus');
+  if(el) el.textContent = msg;
+}
+
+function numberToWordsMYR(amount){
+  const ones = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE',
+    'TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN', 'EIGHTEEN', 'NINETEEN'];
+  const tens = ['', '', 'TWENTY', 'THIRTY', 'FORTY', 'FIFTY', 'SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY'];
+  function threeDigits(n){
+    let s = '';
+    if(n >= 100){
+      s += ones[Math.floor(n/100)] + ' HUNDRED';
+      n = n % 100;
+      if(n > 0) s += ' AND ';
+    }
+    if(n >= 20){
+      s += tens[Math.floor(n/10)];
+      if(n % 10 > 0) s += '-' + ones[n % 10];
+    }else if(n > 0){
+      s += ones[n];
+    }
+    return s;
+  }
+  function toWords(n){
+    if(n === 0) return 'ZERO';
+    const units = ['', ' THOUSAND', ' MILLION', ' BILLION'];
+    let parts = [];
+    let unitIndex = 0;
+    while(n > 0){
+      const chunk = n % 1000;
+      if(chunk > 0){
+        parts.unshift(threeDigits(chunk) + units[unitIndex]);
+      }
+      n = Math.floor(n / 1000);
+      unitIndex++;
+    }
+    return parts.join(' ');
+  }
+  const whole = Math.floor(Math.round((amount || 0) * 100) / 100);
+  return toWords(whole) + ' ONLY';
+}
+
+function currentLedger(){
+  let ledger = state.ledgers[state.currentLedgerId];
+  if(!ledger){
+    const keys = Object.keys(state.ledgers);
+    if(keys.length > 0){
+      state.currentLedgerId = keys[0];
+    }else{
+      const id = uid('ledger');
+      state.ledgers[id] = { name: 'Ledger', entries: [] };
+      state.currentLedgerId = id;
+    }
+    ledger = state.ledgers[state.currentLedgerId];
+  }
+  return ledger;
+}
+
+function setView(v){
+  state.view = v;
+  document.getElementById('tabLedger').classList.toggle('active', v==='ledger');
+  document.getElementById('tabYearly').classList.toggle('active', v==='yearly');
+  document.getElementById('ledgerView').style.display = v==='ledger' ? 'block':'none';
+  document.getElementById('yearlyView').style.display = v==='yearly' ? 'block':'none';
+  render();
+}
+
+function setFilter(f){
+  state.filter = f;
+  document.querySelectorAll('.filter-chip').forEach(el=>{
+    el.classList.toggle('active', el.dataset.filter === f);
+  });
+  render();
+}
+
+function getMonthsForLedger(){
+  const ledger = currentLedger();
+  const keys = new Set(ledger.entries.map(e => monthKey(e.date)));
+  const now = new Date();
+  keys.add(monthKey(now.toISOString()));
+  return Array.from(keys).sort();
+}
+
+function renderMonths(){
+  const months = getMonthsForLedger();
+  if(!state.selectedMonth || !months.includes(state.selectedMonth)){
+    state.selectedMonth = months[months.length-1];
+  }
+  const row = document.getElementById('monthRow');
+  row.innerHTML = '';
+  months.forEach(m=>{
+    const btn = document.createElement('button');
+    btn.className = 'month-chip' + (m===state.selectedMonth ? ' active':'');
+    btn.textContent = monthLabel(m);
+    btn.onclick = ()=>{ state.selectedMonth = m; render(); };
+    row.appendChild(btn);
+  });
+}
+
+function matchesFilter(entry){
+  switch(state.filter){
+    case 'dealer_unpaid': return !entry.dealerPaid;
+    case 'dealer_paid': return !!entry.dealerPaid;
+    case 'com_unpaid': return !entry.comPaid;
+    case 'com_paid': return !!entry.comPaid;
+    default: return true;
+  }
+}
+
+function render(){
+  document.getElementById('ledgerTitle').textContent = currentLedger().name;
+  renderMonths();
+
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const entries = currentLedger().entries
+    .filter(e => monthKey(e.date) === state.selectedMonth)
+    .filter(matchesFilter)
+    .filter(e => !search || e.dealer.toLowerCase().includes(search) || e.invoice.toLowerCase().includes(search))
+    .sort((a,b)=> new Date(a.date) - new Date(b.date));
+
+  let totalInvoiced = 0, totalProfit = 0;
+  entries.forEach(e=>{ totalInvoiced += Number(e.amount)||0; totalProfit += Number(e.profit)||0; });
+  document.getElementById('totalInvoiced').textContent = fmtMoney(totalInvoiced);
+  document.getElementById('totalProfit').textContent = fmtMoney(totalProfit);
+
+  const [y,m] = state.selectedMonth.split('-').map(Number);
+  const monthName = new Date(y,m-1,1).toLocaleString('en-US',{month:'long'});
+  document.getElementById('entriesMeta').textContent = `${entries.length} entries · ${monthName} ${y}`;
+
+  const list = document.getElementById('entriesList');
+  list.innerHTML = '';
+  if(entries.length === 0){
+    list.innerHTML = '<div class="empty">No entries yet for this month.<br>Tap + to add your first invoice.</div>';
+  }
+  entries.forEach(e=>{
+    const card = document.createElement('div');
+    card.className = 'entry';
+    card.onclick = ()=> openEntryForm(e.id);
+    const checked = state.selectedEntryIds.has(e.id);
+    card.innerHTML = `
+      <input type="checkbox" class="entry-check" ${checked ? 'checked' : ''}>
+      <div class="entry-body">
+        <div class="entry-top">
+          <div class="entry-name">${escapeHtml(e.dealer)}</div>
+          <div class="entry-amount">${fmtMoney(e.amount)}</div>
+        </div>
+        <div class="entry-sub">
+          <div>${fmtDate(e.date)} · ${escapeHtml(e.invoice)}</div>
+          <div class="entry-profit">+${fmtMoney(e.profit)}</div>
+        </div>
+        <div class="entry-tags">
+          <span class="tag ${e.dealerPaid ? '' : 'unpaid'}">${e.dealerPaid ? 'Dealer paid' + (e.dealerPaidDate ? ' ' + fmtDate(e.dealerPaidDate) : '') : 'Dealer unpaid'}</span>
+          <span class="tag ${e.comPaid ? '' : 'unpaid'}">${e.comPaid ? 'Com paid' + (e.comPaidDate ? ' ' + fmtDate(e.comPaidDate) : '') : 'Com unpaid'}</span>
+        </div>
+      </div>
+    `;
+    const checkbox = card.querySelector('.entry-check');
+    checkbox.onclick = (ev)=>{
+      ev.stopPropagation();
+      if(ev.target.checked) state.selectedEntryIds.add(e.id);
+      else state.selectedEntryIds.delete(e.id);
+      updateSelectionBar();
+    };
+    list.appendChild(card);
+  });
+
+  updateSelectionBar();
+  renderYearly();
+}
+
+function renderYearly(){
+  const ledger = currentLedger();
+  const byYear = {};
+  ledger.entries.forEach(e=>{
+    const y = new Date(e.date).getFullYear();
+    if(!byYear[y]) byYear[y] = {invoiced:0, profit:0, count:0};
+    byYear[y].invoiced += Number(e.amount)||0;
+    byYear[y].profit += Number(e.profit)||0;
+    byYear[y].count += 1;
+  });
+  const years = Object.keys(byYear).sort((a,b)=>b-a);
+  const container = document.getElementById('yearlyList');
+  container.innerHTML = '';
+  if(years.length === 0){
+    container.innerHTML = '<div class="empty">No entries yet.</div>';
+    return;
+  }
+  years.forEach(y=>{
+    const d = byYear[y];
+    const card = document.createElement('div');
+    card.className = 'entry';
+    card.innerHTML = `
+      <div class="entry-body">
+        <div class="entry-top">
+          <div class="entry-name">${y}</div>
+          <div class="entry-amount">${fmtMoney(d.invoiced)}</div>
+        </div>
+        <div class="entry-sub">
+          <div>${d.count} entries</div>
+          <div class="entry-profit">+${fmtMoney(d.profit)}</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+function pad3(n){ return String(n).padStart(3,'0'); }
+
+function computeInvoiceNumber(dateStr){
+  const d = new Date(dateStr);
+  const mm = pad2(d.getMonth()+1);
+  const yy = pad2(d.getFullYear() % 100);
+  const prefix = `SV${mm}${yy}-`;
+  const ledger = currentLedger();
+  let maxSeq = 0;
+  ledger.entries.forEach(e=>{
+    const match = /^SV(\d{2})(\d{2})-(\d{3})$/i.exec((e.invoice||'').trim());
+    if(match && match[1] === mm && match[2] === yy){
+      maxSeq = Math.max(maxSeq, parseInt(match[3], 10));
+    }
+  });
+  return prefix + pad3(maxSeq + 1);
+}
+
+function autofillInvoiceNumber(){
+  // Only auto-generate for new entries; don't overwrite a saved invoice while editing.
+  if(state.editingEntryId) return;
+  const dateVal = document.getElementById('fDate').value;
+  if(!dateVal) return;
+  document.getElementById('fInvoice').value = computeInvoiceNumber(dateVal);
+}
+
+// --- Itemized product lines ---
+function addItemRow(item){
+  const container = document.getElementById('itemRowsContainer');
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.innerHTML = `
+    <input type="text" class="item-desc" placeholder="Item description" value="${item && item.description ? escapeHtml(item.description) : ''}" oninput="recalcItems()">
+    <input type="number" class="item-qty" placeholder="1" inputmode="decimal" value="${item && item.qty ? item.qty : 1}" oninput="recalcItems()">
+    <input type="number" class="item-price" placeholder="0" inputmode="decimal" value="${item && item.unitPrice ? item.unitPrice : ''}" oninput="recalcItems()">
+    <div class="item-line-total">0.00</div>
+    <button type="button" class="item-remove" onclick="removeItemRow(this)">×</button>
+  `;
+  container.appendChild(row);
+  recalcItems();
+}
+
+function removeItemRow(btn){
+  btn.closest('.item-row').remove();
+  recalcItems();
+}
+
+function getItemRowsData(){
+  const rows = document.querySelectorAll('#itemRowsContainer .item-row');
+  return Array.from(rows).map(row=>({
+    description: row.querySelector('.item-desc').value.trim(),
+    qty: parseFloat(row.querySelector('.item-qty').value) || 0,
+    unitPrice: parseFloat(row.querySelector('.item-price').value) || 0,
+  })).filter(it => it.description || it.qty || it.unitPrice);
+}
+
+function recalcItems(){
+  const rows = document.querySelectorAll('#itemRowsContainer .item-row');
+  const header = document.getElementById('itemsHeader');
+  header.style.display = rows.length > 0 ? 'flex' : 'none';
+
+  let total = 0;
+  rows.forEach(row=>{
+    const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+    const lineTotal = qty * price;
+    row.querySelector('.item-line-total').textContent = lineTotal.toFixed(2);
+    total += lineTotal;
+  });
+
+  const amountField = document.getElementById('fAmount');
+  if(rows.length > 0){
+    amountField.value = total.toFixed(2);
+    amountField.readOnly = true;
+    amountField.style.background = '#f0efe9';
+  }else{
+    amountField.readOnly = false;
+    amountField.style.background = '';
+  }
+}
+
+function updateSelectionBar(){
+  const bar = document.getElementById('selectionBar');
+  const count = state.selectedEntryIds.size;
+  if(count === 0){
+    bar.classList.remove('show');
+    return;
+  }
+  bar.classList.add('show');
+  document.getElementById('selectionCount').textContent = `${count} selected`;
+}
+function clearEntrySelection(){
+  state.selectedEntryIds.clear();
+  render();
+}
+function generateStatementFromSelection(){
+  const ledger = currentLedger();
+  const selected = ledger.entries.filter(e => state.selectedEntryIds.has(e.id));
+  if(selected.length === 0) return;
+  const dealers = new Set(selected.map(e => e.dealer));
+  if(dealers.size > 1){
+    showAlert('Selected invoices belong to more than one dealer. Please select invoices from a single dealer to generate one statement.');
+    return;
+  }
+  const dealer = selected[0].dealer;
+
+  const dealerSelect = document.getElementById('stDealer');
+  dealerSelect.innerHTML = '';
+  getUniqueDealers().forEach(d=>{
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    dealerSelect.appendChild(opt);
+  });
+  dealerSelect.value = dealer;
+
+  document.getElementById('statementOverlay').classList.add('show');
+  populatePeriodOptions();
+  populateCustomerFields(dealer);
+  document.getElementById('stPeriod').value = 'all';
+  state.selectedInvoiceIds = new Set(selected.map(e => e.id));
+  renderInvoiceChecklist();
+}
+
+// --- Entry form ---
+function openEntryForm(entryId){
+  state.editingEntryId = entryId || null;
+  const overlay = document.getElementById('entryOverlay');
+  overlay.classList.add('show');
+  document.getElementById('deleteBtn').style.display = entryId ? 'block' : 'none';
+
+  document.getElementById('itemRowsContainer').innerHTML = '';
+  document.getElementById('fAmount').readOnly = false;
+  document.getElementById('fAmount').style.background = '';
+
+  if(entryId){
+    const e = currentLedger().entries.find(x=>x.id===entryId);
+    document.getElementById('entryFormTitle').textContent = 'Edit entry';
+    document.getElementById('fDealer').value = e.dealer;
+    document.getElementById('fInvoice').value = e.invoice;
+    document.getElementById('fDate').value = e.date.slice(0,10);
+    document.getElementById('fAmount').value = e.amount;
+    document.getElementById('fProfit').value = e.profit;
+    state.chipDealerPaid = !!e.dealerPaid;
+    state.chipComPaid = !!e.comPaid;
+    document.getElementById('fDealerPaidDate').value = e.dealerPaidDate ? e.dealerPaidDate.slice(0,10) : new Date().toISOString().slice(0,10);
+    document.getElementById('fComPaidDate').value = e.comPaidDate ? e.comPaidDate.slice(0,10) : new Date().toISOString().slice(0,10);
+    if(e.items && e.items.length){
+      e.items.forEach(item => addItemRow(item));
+    }
+  }else{
+    document.getElementById('entryFormTitle').textContent = 'Add entry';
+    document.getElementById('fDealer').value = '';
+    document.getElementById('fInvoice').value = '';
+    document.getElementById('fDate').value = new Date().toISOString().slice(0,10);
+    document.getElementById('fAmount').value = '';
+    document.getElementById('fProfit').value = '';
+    state.chipDealerPaid = false;
+    state.chipComPaid = false;
+    document.getElementById('fDealerPaidDate').value = new Date().toISOString().slice(0,10);
+    document.getElementById('fComPaidDate').value = new Date().toISOString().slice(0,10);
+    autofillInvoiceNumber();
+  }
+  recalcItems();
+  updateChipUI();
+}
+function closeEntryForm(){
+  document.getElementById('entryOverlay').classList.remove('show');
+}
+function toggleChip(which){
+  const key = which === 'dealerPaid' ? 'chipDealerPaid' : 'chipComPaid';
+  state[key] = !state[key];
+  updateChipUI();
+}
+function updateChipUI(){
+  document.getElementById('chipDealerPaid').classList.toggle('on', state.chipDealerPaid);
+  document.getElementById('chipComPaid').classList.toggle('on', state.chipComPaid);
+  document.getElementById('dealerPaidDateField').style.display = state.chipDealerPaid ? 'block' : 'none';
+  document.getElementById('comPaidDateField').style.display = state.chipComPaid ? 'block' : 'none';
+}
+async function saveEntry(){
+  const dealer = document.getElementById('fDealer').value.trim();
+  const invoice = document.getElementById('fInvoice').value.trim();
+  const date = document.getElementById('fDate').value;
+  const amount = document.getElementById('fAmount').value;
+  const profit = document.getElementById('fProfit').value;
+  if(!dealer || !date || !amount){
+    showAlert('Please fill in dealer name, date, and amount.');
+    return;
+  }
+  const ledger = currentLedger();
+  const dealerPaidDate = state.chipDealerPaid ? document.getElementById('fDealerPaidDate').value : null;
+  const comPaidDate = state.chipComPaid ? document.getElementById('fComPaidDate').value : null;
+  const items = getItemRowsData();
+  if(state.editingEntryId){
+    const e = ledger.entries.find(x=>x.id===state.editingEntryId);
+    Object.assign(e, {dealer, invoice, date, amount, profit, dealerPaid: state.chipDealerPaid, comPaid: state.chipComPaid, dealerPaidDate, comPaidDate, items});
+  }else{
+    ledger.entries.push({
+      id: uid('entry'), dealer, invoice, date, amount, profit,
+      dealerPaid: state.chipDealerPaid, comPaid: state.chipComPaid,
+      dealerPaidDate, comPaidDate, items
+    });
+  }
+
+  const saveBtn = document.querySelector('#entryOverlay .btn-primary');
+  const originalLabel = saveBtn ? saveBtn.textContent : '';
+  if(saveBtn){ saveBtn.textContent = 'Saving…'; saveBtn.disabled = true; }
+
+  try{
+    // Don't let a stuck/slow save hang the UI forever — proceed locally after a timeout.
+    await Promise.race([
+      persist(),
+      new Promise(resolve => setTimeout(resolve, 6000))
+    ]);
+  }catch(err){
+    setStatus('Could not save to cloud storage, but kept locally on this device.');
+  }finally{
+    if(saveBtn){ saveBtn.textContent = originalLabel; saveBtn.disabled = false; }
+  }
+  closeEntryForm();
+  render();
+}
+function deleteEntry(){
+  showConfirm('Delete this entry?', async ()=>{
+    const ledger = currentLedger();
+    ledger.entries = ledger.entries.filter(x=>x.id !== state.editingEntryId);
+    await persist();
+    closeEntryForm();
+    render();
+  });
+}
+
+// --- Ledger switcher ---
+function openSwitcher(){
+  document.getElementById('switcherOverlay').classList.add('show');
+  renderSwitcher();
+}
+function closeSwitcher(){
+  document.getElementById('switcherOverlay').classList.remove('show');
+}
+function renderSwitcher(){
+  const list = document.getElementById('switcherList');
+  list.innerHTML = '';
+  Object.keys(state.ledgers).forEach(id=>{
+    const l = state.ledgers[id];
+    const item = document.createElement('div');
+    item.className = 'switcher-item' + (id===state.currentLedgerId ? ' active':'');
+    const canDelete = Object.keys(state.ledgers).length > 1;
+    item.innerHTML = `
+      <div class="switcher-name">${escapeHtml(l.name)}</div>
+      ${canDelete ? '<button class="switcher-del">Delete</button>' : ''}
+    `;
+    item.onclick = (ev)=>{
+      if(ev.target.classList.contains('switcher-del')) return;
+      state.currentLedgerId = id;
+      persist();
+      closeSwitcher();
+      render();
+    };
+    if(canDelete){
+      item.querySelector('.switcher-del').onclick = (ev)=>{
+        ev.stopPropagation();
+        showConfirm(`Delete "${l.name}" and all its entries?`, async ()=>{
+          delete state.ledgers[id];
+          if(state.currentLedgerId === id){
+            state.currentLedgerId = Object.keys(state.ledgers)[0];
+          }
+          await persist();
+          renderSwitcher();
+          render();
+        });
+      };
+    }
+    list.appendChild(item);
+  });
+}
+async function createLedger(){
+  const nameInput = document.getElementById('newLedgerName');
+  const name = nameInput.value.trim() || 'New ledger';
+  const id = uid('ledger');
+  state.ledgers[id] = { name, entries: [] };
+  state.currentLedgerId = id;
+  nameInput.value = '';
+  await persist();
+  closeSwitcher();
+  render();
+}
+
+function renumberInvoices(){
+  const ledger = currentLedger();
+  if(!ledger.entries.length){
+    setStatus('No entries to renumber.');
+    return;
+  }
+  showConfirm('Renumber every invoice in this ledger in date order, filling any gaps? This cannot be undone.', async ()=>{
+    // Group entries by month/year of their invoice date
+    const groups = {};
+    ledger.entries.forEach(e=>{
+      const d = new Date(e.date);
+      const key = d.getFullYear() + '-' + pad2(d.getMonth()+1);
+      if(!groups[key]) groups[key] = [];
+      groups[key].push(e);
+    });
+    Object.keys(groups).forEach(key=>{
+      const [yyyy, mm] = key.split('-');
+      const yy = pad2(Number(yyyy) % 100);
+      groups[key]
+        .sort((a,b)=> new Date(a.date) - new Date(b.date))
+        .forEach((entry, idx)=>{
+          entry.invoice = `SV${mm}${yy}-${pad3(idx+1)}`;
+        });
+    });
+    await persist();
+    closeSwitcher();
+    render();
+    setStatus('Invoice numbers refreshed.');
+  });
+}
+
+async function exportBackup(){
+  const payload = {
+    ledgers: state.ledgers,
+    currentLedgerId: state.currentLedgerId,
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  const stamp = new Date().toISOString().slice(0,10);
+  const downloadsApi = await claude.use('downloads');
+  if(!downloadsApi){
+    setStatus('Downloads are unavailable in this view.');
+    return;
+  }
+  try{
+    await downloadsApi.save({ filename: `ledger-backup-${stamp}.json`, data: blob });
+    setStatus('Backup saved.');
+  }catch(e){
+    setStatus(e && e.code === 'declined' ? 'Backup cancelled.' : 'Could not save the backup file.');
+  }
+}
+
+async function importBackup(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if(!data.ledgers || typeof data.ledgers !== 'object'){
+      throw new Error('Invalid file');
+    }
+    event.target.value = '';
+    showDialog('Merge this backup with your current ledgers, or replace everything with the backup?', [
+      {label:'Cancel', style:'btn-secondary'},
+      {label:'Replace all', style:'btn-danger', onClick: async ()=>{
+        state.ledgers = data.ledgers;
+        state.currentLedgerId = data.currentLedgerId || Object.keys(data.ledgers)[0];
+        await persist();
+        closeSwitcher();
+        render();
+        setStatus('Restore complete.');
+      }},
+      {label:'Merge', style:'btn-primary', onClick: async ()=>{
+        Object.keys(data.ledgers).forEach(id=>{
+          if(state.ledgers[id]){
+            const existingIds = new Set(state.ledgers[id].entries.map(e=>e.id));
+            data.ledgers[id].entries.forEach(e=>{
+              if(!existingIds.has(e.id)) state.ledgers[id].entries.push(e);
+            });
+          }else{
+            state.ledgers[id] = data.ledgers[id];
+          }
+        });
+        await persist();
+        closeSwitcher();
+        render();
+        setStatus('Restore complete.');
+      }}
+    ]);
+  }catch(e){
+    setStatus('Could not read that backup file.');
+  }
+}
+
+// --- Company / bank details ---
+function openCompanyInfo(){
+  const ci = state.companyInfo;
+  document.getElementById('ciName').value = ci.name;
+  document.getElementById('ciRegNo').value = ci.regNo;
+  document.getElementById('ciAddr1').value = ci.addressLine1;
+  document.getElementById('ciAddr2').value = ci.addressLine2;
+  document.getElementById('ciPhone').value = ci.phone;
+  document.getElementById('ciFax').value = ci.fax;
+  document.getElementById('ciEmail').value = ci.email;
+  document.getElementById('ciBankAccName').value = ci.bankAccountName;
+  document.getElementById('ciBankName').value = ci.bankName;
+  document.getElementById('ciBankAccNo').value = ci.bankAccountNumber;
+  document.getElementById('companyOverlay').classList.add('show');
+}
+function closeCompanyInfo(){
+  document.getElementById('companyOverlay').classList.remove('show');
+}
+async function saveCompanyInfo(){
+  state.companyInfo = {
+    name: document.getElementById('ciName').value.trim(),
+    regNo: document.getElementById('ciRegNo').value.trim(),
+    addressLine1: document.getElementById('ciAddr1').value.trim(),
+    addressLine2: document.getElementById('ciAddr2').value.trim(),
+    phone: document.getElementById('ciPhone').value.trim(),
+    fax: document.getElementById('ciFax').value.trim(),
+    email: document.getElementById('ciEmail').value.trim(),
+    bankAccountName: document.getElementById('ciBankAccName').value.trim(),
+    bankName: document.getElementById('ciBankName').value.trim(),
+    bankAccountNumber: document.getElementById('ciBankAccNo').value.trim(),
+  };
+  try{
+    if(dbApi){
+      await dbApi.doc('company/info').set(state.companyInfo);
+    }
+  }catch(e){
+    document.getElementById('statementStatus').textContent = 'Could not save company details.';
+  }
+  closeCompanyInfo();
+}
+
+async function saveDealerProfile(dealerName, profile){
+  state.dealerProfiles[dealerName] = profile;
+  try{
+    if(dbApi){
+      await dbApi.doc('dealers/profiles').set({ profiles: state.dealerProfiles });
+    }
+  }catch(e){
+    // best-effort; not critical if this fails
+  }
+}
+
+// --- Dealer statement ---
+function getUniqueDealers(){
+  const names = new Set(currentLedger().entries.map(e => e.dealer));
+  return Array.from(names).sort();
+}
+function getEntryMonths(entries){
+  const keys = new Set(entries.map(e => monthKey(e.date)));
+  return Array.from(keys).sort();
+}
+function toggleCustomerDetails(){
+  const box = document.getElementById('customerDetailsFields');
+  const showing = box.style.display !== 'none';
+  box.style.display = showing ? 'none' : 'block';
+}
+
+function populateCustomerFields(dealer){
+  const profile = state.dealerProfiles[dealer] || {};
+  document.getElementById('stCustAddr1').value = profile.addr1 || '';
+  document.getElementById('stCustAddr2').value = profile.addr2 || '';
+  document.getElementById('stAttention').value = profile.attention || '';
+  document.getElementById('stAccountNo').value = profile.accountNo || '';
+  document.getElementById('stSalesExec').value = profile.salesExec || (state.companyInfo.defaultSalesExec || '');
+  document.getElementById('stCurrency').value = profile.currency || 'RM';
+  document.getElementById('stTerms').value = profile.terms || '30 Days';
+}
+
+function onDealerChange(){
+  state.selectedInvoiceIds = null;
+  populatePeriodOptions();
+  populateCustomerFields(document.getElementById('stDealer').value);
+  renderInvoiceChecklist();
+}
+function onPeriodChange(){
+  state.selectedInvoiceIds = null;
+  renderInvoiceChecklist();
+}
+function openStatement(){
+  const dealers = getUniqueDealers();
+  const dealerSelect = document.getElementById('stDealer');
+  dealerSelect.innerHTML = '';
+  if(dealers.length === 0){
+    dealerSelect.innerHTML = '<option value="">No dealers yet</option>';
+  }else{
+    dealers.forEach(d=>{
+      const opt = document.createElement('option');
+      opt.value = d; opt.textContent = d;
+      dealerSelect.appendChild(opt);
+    });
+  }
+  document.getElementById('statementOverlay').classList.add('show');
+  state.selectedInvoiceIds = null;
+  populatePeriodOptions();
+  populateCustomerFields(dealerSelect.value);
+  renderInvoiceChecklist();
+}
+function closeStatement(){
+  document.getElementById('statementOverlay').classList.remove('show');
+}
+function populatePeriodOptions(){
+  const dealer = document.getElementById('stDealer').value;
+  const entries = currentLedger().entries.filter(e => e.dealer === dealer);
+  const months = getEntryMonths(entries);
+  const periodSelect = document.getElementById('stPeriod');
+  periodSelect.innerHTML = '<option value="all">All time</option>';
+  months.slice().reverse().forEach(m=>{
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = monthLabel(m) + ' only';
+    periodSelect.appendChild(opt);
+  });
+}
+function getPeriodFilteredEntries(){
+  const dealer = document.getElementById('stDealer').value;
+  const period = document.getElementById('stPeriod').value;
+  let entries = currentLedger().entries.filter(e => e.dealer === dealer);
+  if(period !== 'all'){
+    entries = entries.filter(e => monthKey(e.date) === period);
+  }
+  return entries.sort((a,b)=> new Date(a.date) - new Date(b.date));
+}
+function renderInvoiceChecklist(){
+  const entries = getPeriodFilteredEntries();
+  if(!state.selectedInvoiceIds){
+    state.selectedInvoiceIds = new Set(entries.map(e => e.id));
+  }
+  const list = document.getElementById('stInvoiceList');
+  list.innerHTML = '';
+  if(entries.length === 0){
+    list.innerHTML = '<div style="padding:12px; color:var(--muted); font-size:13.5px;">No invoices for this dealer/period.</div>';
+    renderStatementPreview();
+    return;
+  }
+  entries.forEach(e=>{
+    const row = document.createElement('label');
+    row.className = 'invoice-row';
+    const checked = state.selectedInvoiceIds.has(e.id);
+    row.innerHTML = `
+      <input type="checkbox" ${checked ? 'checked' : ''}>
+      <div class="invoice-info">${fmtDate(e.date)} · ${escapeHtml(e.invoice||'')}</div>
+      <div class="invoice-amount">${fmtMoney(e.amount)}</div>
+    `;
+    row.querySelector('input').onchange = (ev)=>{
+      if(ev.target.checked) state.selectedInvoiceIds.add(e.id);
+      else state.selectedInvoiceIds.delete(e.id);
+      renderStatementPreview();
+    };
+    list.appendChild(row);
+  });
+  renderStatementPreview();
+}
+function getStatementEntries(){
+  const entries = getPeriodFilteredEntries();
+  if(!state.selectedInvoiceIds) return entries;
+  return entries.filter(e => state.selectedInvoiceIds.has(e.id));
+}
+function readStatementMeta(){
+  return {
+    addr1: document.getElementById('stCustAddr1').value.trim(),
+    addr2: document.getElementById('stCustAddr2').value.trim(),
+    attention: document.getElementById('stAttention').value.trim(),
+    accountNo: document.getElementById('stAccountNo').value.trim(),
+    salesExec: document.getElementById('stSalesExec').value.trim(),
+    currency: document.getElementById('stCurrency').value.trim() || 'RM',
+    terms: document.getElementById('stTerms').value.trim() || '30 Days',
+  };
+}
+
+// Builds the running-balance transaction list (debits = invoices, credits = grouped payments)
+function computeStatementTransactions(entries){
+  const debitRows = entries.map(e => ({
+    date: e.date,
+    reference: e.invoice || '',
+    description: 'Sales',
+    debit: Number(e.amount) || 0,
+    credit: 0,
+  }));
+
+  const paymentGroups = {};
+  entries.forEach(e=>{
+    if(e.dealerPaid && e.dealerPaidDate){
+      const key = e.dealerPaidDate.slice(0,10);
+      paymentGroups[key] = (paymentGroups[key] || 0) + (Number(e.amount) || 0);
+    }
+  });
+  const creditRows = Object.keys(paymentGroups).map(dateKey => ({
+    date: dateKey,
+    reference: '',
+    description: 'Payment For Account',
+    debit: 0,
+    credit: paymentGroups[dateKey],
+  }));
+
+  const all = debitRows.concat(creditRows).sort((a,b)=> new Date(a.date) - new Date(b.date));
+  let balance = 0;
+  all.forEach(row=>{
+    balance += row.debit - row.credit;
+    row.balance = balance;
+  });
+  const totalDebit = debitRows.reduce((s,r)=>s+r.debit,0);
+  const totalCredit = creditRows.reduce((s,r)=>s+r.credit,0);
+  return { rows: all, totalDebit, totalCredit, debitCount: debitRows.length, creditCount: creditRows.length, closingBalance: balance };
+}
+
+// Last 6 months of total invoiced amount for this dealer, across the whole ledger (not just the current selection)
+function computeMonthlySummary(entries){
+  const totals = {};
+  entries.forEach(e=>{
+    const k = monthKey(e.date);
+    totals[k] = (totals[k] || 0) + (Number(e.amount) || 0);
+  });
+  const keys = Object.keys(totals).sort((a,b)=> b.localeCompare(a)).slice(0,6);
+  return keys.map(k=>{
+    const [y,m] = k.split('-').map(Number);
+    const label = new Date(y, m-1, 1).toLocaleString('en-US',{month:'short'}) + ' ' + y;
+    return { label, total: totals[k] };
+  });
+}
+
+function buildStatementPreviewHTML(dealer, entries){
+  const ci = state.companyInfo;
+  const meta = readStatementMeta();
+  const { rows, totalDebit, totalCredit, debitCount, creditCount, closingBalance } = computeStatementTransactions(entries);
+  const monthly = computeMonthlySummary(entries);
+  const statementDate = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'/');
+
+  const txRows = rows.map(r => `
+    <tr>
+      <td style="padding:4px 3px;border-bottom:1px solid #eee;">${fmtDate(r.date)} ${new Date(r.date).getFullYear()}</td>
+      <td style="padding:4px 3px;border-bottom:1px solid #eee;">${escapeHtml(r.reference)}</td>
+      <td style="padding:4px 3px;border-bottom:1px solid #eee;">${escapeHtml(r.description)}</td>
+      <td style="padding:4px 3px;border-bottom:1px solid #eee;text-align:right;">${r.debit ? Number(r.debit).toLocaleString('en-US',{minimumFractionDigits:2}) : ''}</td>
+      <td style="padding:4px 3px;border-bottom:1px solid #eee;text-align:right;">${r.credit ? Number(r.credit).toLocaleString('en-US',{minimumFractionDigits:2}) : ''}</td>
+      <td style="padding:4px 3px;border-bottom:1px solid #eee;text-align:right;">${Number(r.balance).toLocaleString('en-US',{minimumFractionDigits:2})}</td>
+    </tr>`).join('');
+
+  const contactBits = [];
+  if(ci.phone) contactBits.push(`Phone: ${escapeHtml(ci.phone)}`);
+  if(ci.fax) contactBits.push(`Fax: ${escapeHtml(ci.fax)}`);
+
+  const monthlyCells = monthly.map(m => `<td style="border:1px solid #999; padding:5px 6px; text-align:center;">${m.label}</td>`).join('');
+  const monthlyValues = monthly.map(m => `<td style="border:1px solid #999; padding:5px 6px; text-align:center;">${m.total ? Number(m.total).toLocaleString('en-US',{minimumFractionDigits:2}) : '-'}</td>`).join('');
+
+  return `
+  <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;color:#111;font-family:Georgia, 'Times New Roman', serif; font-size:11px; overflow-x:auto;">
+    <div style="font-weight:700;font-size:15px;">${escapeHtml(ci.name||'')} <span style="font-weight:400; font-size:10px;">${ci.regNo ? '('+escapeHtml(ci.regNo)+')' : ''}</span></div>
+    ${ci.addressLine1 ? `<div style="font-size:9.5px;color:#444;">${escapeHtml(ci.addressLine1)}</div>` : ''}
+    ${ci.addressLine2 ? `<div style="font-size:9.5px;color:#444;">${escapeHtml(ci.addressLine2)}</div>` : ''}
+    ${contactBits.length ? `<div style="font-size:9.5px;color:#444;">${contactBits.join('&nbsp;&nbsp;&nbsp;')}</div>` : ''}
+    ${ci.email ? `<div style="font-size:9.5px;color:#444;">Email: ${escapeHtml(ci.email)}</div>` : ''}
+    <hr style="margin:8px 0;border:none;border-top:1.5px solid #111;">
+
+    <div style="display:flex; justify-content:space-between; gap:14px; margin-bottom:8px;">
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:9.5px; color:#666;">Customer</div>
+        <div style="font-weight:700; font-size:12px;">${escapeHtml(dealer)}</div>
+        ${meta.addr1 ? `<div style="font-size:9.5px;">${escapeHtml(meta.addr1)}</div>` : ''}
+        ${meta.addr2 ? `<div style="font-size:9.5px;">${escapeHtml(meta.addr2)}</div>` : ''}
+      </div>
+      <div style="flex:1; border:1px solid #111; padding:8px; font-size:10px;">
+        <div style="text-align:center; font-weight:700; font-size:12px; margin-bottom:6px;">Statement of Account</div>
+        <div style="display:flex; justify-content:space-between;"><span>Total Debit (${debitCount})</span><span>${totalDebit.toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>
+        <div style="display:flex; justify-content:space-between;"><span>Total Credit (${creditCount})</span><span>${totalCredit.toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>
+        <hr style="margin:5px 0; border:none; border-top:1px solid #111;">
+        <div style="display:flex; justify-content:space-between; font-weight:700;"><span>Closing Balance</span><span>${closingBalance.toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-wrap:wrap; gap:6px 14px; font-size:9.5px; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 0; margin-bottom:8px;">
+      <div><b>Attention</b><br>${escapeHtml(meta.attention||'-')}</div>
+      <div><b>Customer Account</b><br>${escapeHtml(meta.accountNo||'-')}</div>
+      <div><b>Sales Executive</b><br>${escapeHtml(meta.salesExec||'-')}</div>
+      <div><b>Currency</b><br>${escapeHtml(meta.currency)}</div>
+      <div><b>Terms</b><br>${escapeHtml(meta.terms)}</div>
+      <div><b>Date</b><br>${statementDate}</div>
+    </div>
+
+    <table style="width:100%; border-collapse:collapse; font-size:10px;">
+      <thead>
+        <tr style="border-bottom:1px solid #111; font-weight:700;">
+          <th style="text-align:left; padding:4px 3px;">Date</th>
+          <th style="text-align:left; padding:4px 3px;">Reference</th>
+          <th style="text-align:left; padding:4px 3px;">Description</th>
+          <th style="text-align:right; padding:4px 3px;">Debit</th>
+          <th style="text-align:right; padding:4px 3px;">Credit</th>
+          <th style="text-align:right; padding:4px 3px;">Balance</th>
+        </tr>
+      </thead>
+      <tbody>${txRows}</tbody>
+    </table>
+
+    <div style="display:flex; justify-content:space-between; margin-top:10px; padding-top:8px; border-top:1px solid #111; font-size:10px;">
+      <span>${escapeHtml(meta.currency)} MALAYSIA: ${numberToWordsMYR(closingBalance)}</span>
+      <span style="font-weight:700;">${escapeHtml(meta.currency)}: ${closingBalance.toLocaleString('en-US',{minimumFractionDigits:2})}</span>
+    </div>
+
+    <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:9.5px;">
+      <tr>${monthlyCells}</tr>
+      <tr>${monthlyValues}</tr>
+    </table>
+
+    <div style="font-size:9px; color:#555; margin-top:10px;">We shall be grateful if you will let us have payment as soon as possible. Any discrepancy in this statement must be reported to us in writing within 10 days.</div>
+
+    <hr style="margin:14px 0 8px;border:none;border-top:1px solid #ccc;">
+    <div style="font-size:10px;font-weight:700;margin-bottom:4px;">Payment Details</div>
+    <div style="font-size:10px;">Account Name&nbsp;&nbsp;&nbsp;: ${escapeHtml(ci.bankAccountName||'')}</div>
+    <div style="font-size:10px;">Bank&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ${escapeHtml(ci.bankName||'')}</div>
+    <div style="font-size:10px;">Account Number : ${escapeHtml(ci.bankAccountNumber||'')}</div>
+  </div>`;
+}
+
+function renderStatementPreview(){
+  const dealer = document.getElementById('stDealer').value;
+  const entries = getStatementEntries();
+  const preview = document.getElementById('statementPreview');
+  if(!dealer || entries.length === 0){
+    preview.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:10px 2px;">No invoices selected.</div>';
+    return;
+  }
+  preview.innerHTML = buildStatementPreviewHTML(dealer, entries);
+}
+
+function showStatementStatus(msg){
+  const el = document.getElementById('statementStatus');
+  el.textContent = msg;
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+async function generateStatementPDF(mode){
+  try{
+  if(typeof window.jspdf === 'undefined'){
+    showStatementStatus('PDF library failed to load. Please check your internet connection and reopen this ledger, then try again.');
+    return;
+  }
+  const dealer = document.getElementById('stDealer').value;
+  if(!dealer){
+    showStatementStatus('No dealer selected.');
+    return;
+  }
+  const entries = getStatementEntries();
+  if(entries.length === 0){
+    showStatementStatus('No invoices selected. Tick at least one invoice above.');
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const marginX = 40;
+  const rightX = pageWidth - marginX;
+  let y = 50;
+  const ci = state.companyInfo;
+  const meta = readStatementMeta();
+
+  // Persist this dealer's profile fields for next time
+  await saveDealerProfile(dealer, {
+    addr1: meta.addr1, addr2: meta.addr2, attention: meta.attention,
+    accountNo: meta.accountNo, salesExec: meta.salesExec, currency: meta.currency, terms: meta.terms
+  });
+
+  const { rows, totalDebit, totalCredit, debitCount, creditCount, closingBalance } = computeStatementTransactions(entries);
+  const monthly = computeMonthlySummary(entries);
+
+  // Letterhead
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(15);
+  doc.text((ci.name || '') + (ci.regNo ? '  (' + ci.regNo + ')' : ''), marginX, y);
+  y += 16;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(60,60,60);
+  if(ci.addressLine1){ doc.text(ci.addressLine1, marginX, y); y += 12; }
+  if(ci.addressLine2){ doc.text(ci.addressLine2, marginX, y); y += 12; }
+  const contactBits = [];
+  if(ci.phone) contactBits.push(`Phone: ${ci.phone}`);
+  if(ci.fax) contactBits.push(`Fax: ${ci.fax}`);
+  if(contactBits.length){ doc.text(contactBits.join('   '), marginX, y); y += 12; }
+  if(ci.email){ doc.text(`Email: ${ci.email}`, marginX, y); y += 12; }
+
+  y += 6;
+  doc.setDrawColor(20,20,20);
+  doc.setLineWidth(1);
+  doc.line(marginX, y, rightX, y);
+  y += 18;
+
+  // Customer block (left) + Statement of Account box (right)
+  const boxTop = y;
+  const boxW = 220;
+  const boxX = rightX - boxW;
+  doc.setTextColor(20,20,20);
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica','normal');
+  doc.text('Customer', marginX, y);
+  y += 12;
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.text(dealer, marginX, y);
+  y += 13;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  if(meta.addr1){ doc.text(meta.addr1, marginX, y); y += 12; }
+  if(meta.addr2){ doc.text(meta.addr2, marginX, y); y += 12; }
+
+  doc.setDrawColor(20,20,20);
+  doc.setLineWidth(0.75);
+  doc.rect(boxX, boxTop - 10, boxW, 74);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.text('Statement of Account', boxX + boxW/2, boxTop + 6, {align:'center'});
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.text(`Total Debit (${debitCount})`, boxX + 8, boxTop + 22);
+  doc.text(totalDebit.toLocaleString('en-US',{minimumFractionDigits:2}), boxX + boxW - 8, boxTop + 22, {align:'right'});
+  doc.text(`Total Credit (${creditCount})`, boxX + 8, boxTop + 36);
+  doc.text(totalCredit.toLocaleString('en-US',{minimumFractionDigits:2}), boxX + boxW - 8, boxTop + 36, {align:'right'});
+  doc.line(boxX + 6, boxTop + 44, boxX + boxW - 6, boxTop + 44);
+  doc.setFont('helvetica','bold');
+  doc.text('Closing Balance', boxX + 8, boxTop + 58);
+  doc.text(closingBalance.toLocaleString('en-US',{minimumFractionDigits:2}), boxX + boxW - 8, boxTop + 58, {align:'right'});
+
+  y = Math.max(y, boxTop + 74) + 14;
+
+  // Meta row: Attention / Account / Sales Exec / Currency / Terms / Date
+  doc.setDrawColor(20,20,20);
+  doc.line(marginX, y, rightX, y);
+  y += 14;
+  const metaColW = (rightX - marginX) / 6;
+  const metaCols = [
+    ['Attention', meta.attention || '-'],
+    ['Customer Account', meta.accountNo || '-'],
+    ['Sales Executive', meta.salesExec || '-'],
+    ['Currency', meta.currency],
+    ['Terms', meta.terms],
+    ['Date', new Date().toLocaleDateString('en-GB')],
+  ];
+  doc.setFontSize(8);
+  metaCols.forEach((col, i)=>{
+    const cx = marginX + i*metaColW;
+    doc.setFont('helvetica','bold');
+    doc.text(col[0], cx, y);
+    doc.setFont('helvetica','normal');
+    doc.text(String(col[1]), cx, y + 11);
+  });
+  y += 22;
+  doc.line(marginX, y, rightX, y);
+  y += 18;
+
+  // Transaction table
+  const colX = { date: marginX, ref: marginX+75, desc: marginX+155, debit: marginX+330, credit: marginX+400, balance: marginX+470 };
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.text('Date', colX.date, y);
+  doc.text('Reference', colX.ref, y);
+  doc.text('Description', colX.desc, y);
+  doc.text('Debit', colX.debit, y, {align:'right'});
+  doc.text('Credit', colX.credit, y, {align:'right'});
+  doc.text('Balance', colX.balance, y, {align:'right'});
+  y += 6;
+  doc.line(marginX, y, rightX, y);
+  y += 14;
+
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8.5);
+  rows.forEach(r=>{
+    if(y > 740){
+      doc.addPage();
+      y = 56;
+    }
+    doc.text(fmtDate(r.date) + ' ' + new Date(r.date).getFullYear(), colX.date, y);
+    doc.text(r.reference || '', colX.ref, y);
+    doc.text(r.description, colX.desc, y);
+    if(r.debit) doc.text(Number(r.debit).toLocaleString('en-US',{minimumFractionDigits:2}), colX.debit, y, {align:'right'});
+    if(r.credit) doc.text(Number(r.credit).toLocaleString('en-US',{minimumFractionDigits:2}), colX.credit, y, {align:'right'});
+    doc.text(Number(r.balance).toLocaleString('en-US',{minimumFractionDigits:2}), colX.balance, y, {align:'right'});
+    y += 16;
+  });
+
+  y += 8;
+  if(y > 740){ doc.addPage(); y = 56; }
+  doc.line(marginX, y, rightX, y);
+  y += 16;
+
+  // Amount in words + closing balance
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica','normal');
+  doc.text(`${meta.currency} MALAYSIA: ${numberToWordsMYR(closingBalance)}`, marginX, y);
+  doc.setFont('helvetica','bold');
+  doc.text(`${meta.currency}: ${closingBalance.toLocaleString('en-US',{minimumFractionDigits:2})}`, rightX, y, {align:'right'});
+  y += 24;
+
+  // Monthly summary boxes
+  if(y > 700){ doc.addPage(); y = 56; }
+  const monthColW = (rightX - marginX) / monthly.length;
+  doc.setDrawColor(120,120,120);
+  doc.setLineWidth(0.75);
+  monthly.forEach((m,i)=>{
+    doc.rect(marginX + i*monthColW, y, monthColW, 20);
+  });
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(8);
+  monthly.forEach((m,i)=>{
+    doc.text(m.label, marginX + i*monthColW + monthColW/2, y + 13, {align:'center'});
+  });
+  y += 20;
+  monthly.forEach((m,i)=>{
+    doc.rect(marginX + i*monthColW, y, monthColW, 20);
+  });
+  doc.setFont('helvetica','normal');
+  monthly.forEach((m,i)=>{
+    doc.text(m.total ? Number(m.total).toLocaleString('en-US',{minimumFractionDigits:2}) : '-', marginX + i*monthColW + monthColW/2, y + 13, {align:'center'});
+  });
+  y += 32;
+
+  doc.setFontSize(8);
+  doc.setTextColor(80,80,80);
+  const footNote = 'We shall be grateful if you will let us have payment as soon as possible. Any discrepancy in this statement must be reported to us in writing within 10 days.';
+  const footLines = doc.splitTextToSize(footNote, rightX - marginX);
+  doc.text(footLines, marginX, y);
+  y += footLines.length * 11 + 16;
+
+  // Bank details footer
+  if(y > 740){ doc.addPage(); y = 56; }
+  doc.setDrawColor(210,205,190);
+  doc.setLineWidth(0.75);
+  doc.line(marginX, y, rightX, y);
+  y += 18;
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(20,20,20);
+  doc.text('Payment Details', marginX, y);
+  y += 14;
+  doc.setFont('helvetica','normal');
+  const ciFooter = state.companyInfo;
+  if(ciFooter.bankAccountName){ doc.text(`Account Name   : ${ciFooter.bankAccountName}`, marginX, y); y += 13; }
+  if(ciFooter.bankName){ doc.text(`Bank                 : ${ciFooter.bankName}`, marginX, y); y += 13; }
+  if(ciFooter.bankAccountNumber){ doc.text(`Account Number : ${ciFooter.bankAccountNumber}`, marginX, y); y += 13; }
+
+  const safeDealer = dealer.replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+  const filename = `statement-${safeDealer}-${new Date().toISOString().slice(0,10)}.pdf`;
+
+  async function savePdf(){
+    const blob = doc.output('blob');
+    const downloadsApi = await claude.use('downloads');
+    if(!downloadsApi){
+      showStatementStatus('Downloads are unavailable in this view.');
+      return;
+    }
+    try{
+      await downloadsApi.save({ filename, data: blob });
+      showStatementStatus('PDF saved — check your downloads, then share it via WhatsApp from there.');
+    }catch(err){
+      if(err && err.code === 'declined'){
+        showStatementStatus('Save cancelled.');
+      }else{
+        showStatementStatus('Could not save the PDF. Please try again.');
+      }
+    }
+  }
+
+  if(mode === 'share' && navigator.canShare){
+    const blob = doc.output('blob');
+    const file = new File([blob], filename, {type:'application/pdf'});
+    if(navigator.canShare({files:[file]})){
+      navigator.share({
+        files:[file],
+        title: `Statement for ${dealer}`,
+        text: `Statement for ${dealer} — ${currentLedger().name}`
+      }).catch(()=>{
+        savePdf();
+      });
+      return;
+    }
+  }
+  await savePdf();
+  }catch(err){
+    showStatementStatus('Something went wrong generating the PDF: ' + (err && err.message ? err.message : 'unknown error'));
+  }
+}
+
+loadState();
+</script>
+</body>
+</html>
