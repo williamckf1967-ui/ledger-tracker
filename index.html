@@ -369,6 +369,43 @@
     border-color:var(--green-700);
     color:var(--mint-ink);
   }
+  .item-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-bottom:8px;
+  }
+  .item-row input{
+    padding:10px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:14px;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  .item-row .item-desc{ flex:2; min-width:0; }
+  .item-row .item-qty{ width:52px; text-align:center; }
+  .item-row .item-price{ width:72px; text-align:right; }
+  .item-row .item-line-total{
+    width:72px;
+    text-align:right;
+    font-size:13px;
+    font-weight:600;
+    color:var(--green-700);
+    flex-shrink:0;
+  }
+  .item-row .item-remove{
+    width:24px; height:24px;
+    border-radius:50%;
+    border:none;
+    background:#f3e3df;
+    color:var(--danger);
+    font-size:14px;
+    line-height:1;
+    flex-shrink:0;
+    cursor:pointer;
+  }
   .sheet-actions{
     display:flex;
     gap:10px;
@@ -503,6 +540,7 @@
       <button class="filter-chip" data-filter="dealer_paid" onclick="setFilter('dealer_paid')">Dealer paid</button>
       <button class="filter-chip" data-filter="com_unpaid" onclick="setFilter('com_unpaid')">Com unpaid</button>
       <button class="filter-chip" data-filter="com_paid" onclick="setFilter('com_paid')">Com paid</button>
+      <button class="filter-chip" data-filter="dealer_paid_com_unpaid" onclick="setFilter('dealer_paid_com_unpaid')">Dealer paid · Com unpaid</button>
     </div>
 
     <div class="totals">
@@ -553,6 +591,18 @@
         <input id="fDate" type="date" onchange="autofillInvoiceNumber()">
       </div>
     </div>
+
+    <label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600;">Items (optional)</label>
+    <div id="itemsHeader" style="display:none; gap:8px; font-size:11px; color:var(--muted); font-weight:600; padding:0 2px 4px;">
+      <div style="flex:2;">Description</div>
+      <div style="width:52px; text-align:center;">Qty</div>
+      <div style="width:72px; text-align:right;">Unit price</div>
+      <div style="width:72px; text-align:right;">Total</div>
+      <div style="width:24px;"></div>
+    </div>
+    <div id="itemRowsContainer" style="margin-bottom:8px;"></div>
+    <button type="button" class="btn btn-secondary" style="width:100%; margin-bottom:16px;" onclick="addItemRow()">+ Add item</button>
+
     <div class="row2">
       <div class="field">
         <label>Invoiced amount (RM)</label>
@@ -604,6 +654,7 @@
       <button class="btn btn-secondary" onclick="document.getElementById('restoreFile').click()">Restore from file</button>
     </div>
     <input type="file" id="restoreFile" accept="application/json" style="display:none;" onchange="importBackup(event)">
+    <button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="renumberInvoices()">Renumber invoices</button>
     <div class="status-msg" id="storageStatus"></div>
   </div>
 </div>
@@ -995,6 +1046,7 @@ function matchesFilter(entry){
     case 'dealer_paid': return !!entry.dealerPaid;
     case 'com_unpaid': return !entry.comPaid;
     case 'com_paid': return !!entry.comPaid;
+    case 'dealer_paid_com_unpaid': return !!entry.dealerPaid && !entry.comPaid;
     default: return true;
   }
 }
@@ -1130,6 +1182,61 @@ function autofillInvoiceNumber(){
   document.getElementById('fInvoice').value = computeInvoiceNumber(dateVal);
 }
 
+// --- Itemized product lines ---
+function addItemRow(item){
+  const container = document.getElementById('itemRowsContainer');
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.innerHTML = `
+    <input type="text" class="item-desc" placeholder="Item description" value="${item && item.description ? escapeHtml(item.description) : ''}" oninput="recalcItems()">
+    <input type="number" class="item-qty" placeholder="1" inputmode="decimal" value="${item && item.qty ? item.qty : 1}" oninput="recalcItems()">
+    <input type="number" class="item-price" placeholder="0" inputmode="decimal" value="${item && item.unitPrice ? item.unitPrice : ''}" oninput="recalcItems()">
+    <div class="item-line-total">0.00</div>
+    <button type="button" class="item-remove" onclick="removeItemRow(this)">×</button>
+  `;
+  container.appendChild(row);
+  recalcItems();
+}
+
+function removeItemRow(btn){
+  btn.closest('.item-row').remove();
+  recalcItems();
+}
+
+function getItemRowsData(){
+  const rows = document.querySelectorAll('#itemRowsContainer .item-row');
+  return Array.from(rows).map(row=>({
+    description: row.querySelector('.item-desc').value.trim(),
+    qty: parseFloat(row.querySelector('.item-qty').value) || 0,
+    unitPrice: parseFloat(row.querySelector('.item-price').value) || 0,
+  })).filter(it => it.description || it.qty || it.unitPrice);
+}
+
+function recalcItems(){
+  const rows = document.querySelectorAll('#itemRowsContainer .item-row');
+  const header = document.getElementById('itemsHeader');
+  header.style.display = rows.length > 0 ? 'flex' : 'none';
+
+  let total = 0;
+  rows.forEach(row=>{
+    const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+    const lineTotal = qty * price;
+    row.querySelector('.item-line-total').textContent = lineTotal.toFixed(2);
+    total += lineTotal;
+  });
+
+  const amountField = document.getElementById('fAmount');
+  if(rows.length > 0){
+    amountField.value = total.toFixed(2);
+    amountField.readOnly = true;
+    amountField.style.background = '#f0efe9';
+  }else{
+    amountField.readOnly = false;
+    amountField.style.background = '';
+  }
+}
+
 function updateSelectionBar(){
   const bar = document.getElementById('selectionBar');
   const count = state.selectedEntryIds.size;
@@ -1179,6 +1286,10 @@ function openEntryForm(entryId){
   overlay.classList.add('show');
   document.getElementById('deleteBtn').style.display = entryId ? 'block' : 'none';
 
+  document.getElementById('itemRowsContainer').innerHTML = '';
+  document.getElementById('fAmount').readOnly = false;
+  document.getElementById('fAmount').style.background = '';
+
   if(entryId){
     const e = currentLedger().entries.find(x=>x.id===entryId);
     document.getElementById('entryFormTitle').textContent = 'Edit entry';
@@ -1191,6 +1302,9 @@ function openEntryForm(entryId){
     state.chipComPaid = !!e.comPaid;
     document.getElementById('fDealerPaidDate').value = e.dealerPaidDate ? e.dealerPaidDate.slice(0,10) : new Date().toISOString().slice(0,10);
     document.getElementById('fComPaidDate').value = e.comPaidDate ? e.comPaidDate.slice(0,10) : new Date().toISOString().slice(0,10);
+    if(e.items && e.items.length){
+      e.items.forEach(item => addItemRow(item));
+    }
   }else{
     document.getElementById('entryFormTitle').textContent = 'Add entry';
     document.getElementById('fDealer').value = '';
@@ -1204,6 +1318,7 @@ function openEntryForm(entryId){
     document.getElementById('fComPaidDate').value = new Date().toISOString().slice(0,10);
     autofillInvoiceNumber();
   }
+  recalcItems();
   updateChipUI();
 }
 function closeEntryForm(){
@@ -1233,14 +1348,15 @@ async function saveEntry(){
   const ledger = currentLedger();
   const dealerPaidDate = state.chipDealerPaid ? document.getElementById('fDealerPaidDate').value : null;
   const comPaidDate = state.chipComPaid ? document.getElementById('fComPaidDate').value : null;
+  const items = getItemRowsData();
   if(state.editingEntryId){
     const e = ledger.entries.find(x=>x.id===state.editingEntryId);
-    Object.assign(e, {dealer, invoice, date, amount, profit, dealerPaid: state.chipDealerPaid, comPaid: state.chipComPaid, dealerPaidDate, comPaidDate});
+    Object.assign(e, {dealer, invoice, date, amount, profit, dealerPaid: state.chipDealerPaid, comPaid: state.chipComPaid, dealerPaidDate, comPaidDate, items});
   }else{
     ledger.entries.push({
       id: uid('entry'), dealer, invoice, date, amount, profit,
       dealerPaid: state.chipDealerPaid, comPaid: state.chipComPaid,
-      dealerPaidDate, comPaidDate
+      dealerPaidDate, comPaidDate, items
     });
   }
 
@@ -1326,6 +1442,37 @@ async function createLedger(){
   await persist();
   closeSwitcher();
   render();
+}
+
+function renumberInvoices(){
+  const ledger = currentLedger();
+  if(!ledger.entries.length){
+    setStatus('No entries to renumber.');
+    return;
+  }
+  showConfirm('Renumber every invoice in this ledger in date order, filling any gaps? This cannot be undone.', async ()=>{
+    // Group entries by month/year of their invoice date
+    const groups = {};
+    ledger.entries.forEach(e=>{
+      const d = new Date(e.date);
+      const key = d.getFullYear() + '-' + pad2(d.getMonth()+1);
+      if(!groups[key]) groups[key] = [];
+      groups[key].push(e);
+    });
+    Object.keys(groups).forEach(key=>{
+      const [yyyy, mm] = key.split('-');
+      const yy = pad2(Number(yyyy) % 100);
+      groups[key]
+        .sort((a,b)=> new Date(a.date) - new Date(b.date))
+        .forEach((entry, idx)=>{
+          entry.invoice = `SV${mm}${yy}-${pad3(idx+1)}`;
+        });
+    });
+    await persist();
+    closeSwitcher();
+    render();
+    setStatus('Invoice numbers refreshed.');
+  });
 }
 
 function exportBackup(){
@@ -1605,20 +1752,17 @@ function computeStatementTransactions(entries){
 }
 
 // Last 6 months of total invoiced amount for this dealer, across the whole ledger (not just the current selection)
-function computeMonthlySummary(dealer){
-  const ledger = currentLedger();
-  const allDealerEntries = ledger.entries.filter(e => e.dealer === dealer);
-  const now = new Date();
-  const months = [];
-  for(let i=0; i<6; i++){
-    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-    months.push({ key: d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'), label: d.toLocaleString('en-US',{month:'short'}) + ' ' + d.getFullYear() });
-  }
-  return months.map(m=>{
-    const total = allDealerEntries
-      .filter(e => monthKey(e.date) === m.key)
-      .reduce((s,e)=> s + (Number(e.amount)||0), 0);
-    return { label: m.label, total };
+function computeMonthlySummary(entries){
+  const totals = {};
+  entries.forEach(e=>{
+    const k = monthKey(e.date);
+    totals[k] = (totals[k] || 0) + (Number(e.amount) || 0);
+  });
+  const keys = Object.keys(totals).sort((a,b)=> b.localeCompare(a)).slice(0,6);
+  return keys.map(k=>{
+    const [y,m] = k.split('-').map(Number);
+    const label = new Date(y, m-1, 1).toLocaleString('en-US',{month:'short'}) + ' ' + y;
+    return { label, total: totals[k] };
   });
 }
 
@@ -1626,7 +1770,7 @@ function buildStatementPreviewHTML(dealer, entries){
   const ci = state.companyInfo;
   const meta = readStatementMeta();
   const { rows, totalDebit, totalCredit, debitCount, creditCount, closingBalance } = computeStatementTransactions(entries);
-  const monthly = computeMonthlySummary(dealer);
+  const monthly = computeMonthlySummary(entries);
   const statementDate = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'/');
 
   const txRows = rows.map(r => `
@@ -1764,7 +1908,7 @@ async function generateStatementPDF(mode){
   });
 
   const { rows, totalDebit, totalCredit, debitCount, creditCount, closingBalance } = computeStatementTransactions(entries);
-  const monthly = computeMonthlySummary(dealer);
+  const monthly = computeMonthlySummary(entries);
 
   // Letterhead
   doc.setFont('helvetica', 'bold');
