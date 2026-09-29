@@ -519,6 +519,7 @@
       <button class="ledger-switch" onclick="openSwitcher()">▾</button>
     </div>
     <div style="display:flex; gap:8px;">
+      <button class="icon-btn" onclick="openItemsView()" title="View items by dealer">📦</button>
       <button class="icon-btn" onclick="openStatement()" title="Generate statement">📄</button>
       <button class="icon-btn" onclick="openSwitcher()" title="Switch ledger">☰</button>
     </div>
@@ -710,6 +711,21 @@
     <div class="sheet-actions">
       <button class="btn btn-secondary" onclick="closeCompanyInfo()">Cancel</button>
       <button class="btn btn-primary" onclick="saveCompanyInfo()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Items by dealer sheet -->
+<div class="overlay" id="itemsViewOverlay">
+  <div class="sheet">
+    <h2>Items by dealer</h2>
+    <div class="field">
+      <label>Dealer</label>
+      <select id="ivDealer" onchange="renderItemsView()"></select>
+    </div>
+    <div id="itemsViewList" style="max-height:60vh; overflow-y:auto; margin-bottom:14px;"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-primary" style="width:100%;" onclick="closeItemsView()">Close</button>
     </div>
   </div>
 </div>
@@ -1592,6 +1608,94 @@ async function saveDealerProfile(dealerName, profile){
 function getUniqueDealers(){
   const names = new Set(currentLedger().entries.map(e => e.dealer));
   return Array.from(names).sort();
+}
+
+// --- Items by dealer view ---
+function openItemsView(){
+  const dealers = getUniqueDealers();
+  const sel = document.getElementById('ivDealer');
+  sel.innerHTML = '';
+  if(dealers.length === 0){
+    sel.innerHTML = '<option value="">No dealers yet</option>';
+  }else{
+    dealers.forEach(d=>{
+      const opt = document.createElement('option');
+      opt.value = d; opt.textContent = d;
+      sel.appendChild(opt);
+    });
+  }
+  document.getElementById('itemsViewOverlay').classList.add('show');
+  renderItemsView();
+}
+function closeItemsView(){
+  document.getElementById('itemsViewOverlay').classList.remove('show');
+}
+function renderItemsView(){
+  const dealer = document.getElementById('ivDealer').value;
+  const list = document.getElementById('itemsViewList');
+  if(!dealer){
+    list.innerHTML = '<div style="color:var(--muted); font-size:14px; padding:10px 2px;">No dealers yet.</div>';
+    return;
+  }
+  const entries = currentLedger().entries
+    .filter(e => e.dealer === dealer)
+    .sort((a,b)=> new Date(a.date) - new Date(b.date));
+
+  if(entries.length === 0){
+    list.innerHTML = '<div style="color:var(--muted); font-size:14px; padding:10px 2px;">No invoices for this dealer.</div>';
+    return;
+  }
+
+  let grandTotal = 0;
+  const rows = [];
+  entries.forEach(e=>{
+    if(e.items && e.items.length){
+      e.items.forEach(it=>{
+        const lineTotal = (Number(it.qty)||0) * (Number(it.unitPrice)||0);
+        grandTotal += lineTotal;
+        rows.push(`
+          <tr>
+            <td style="padding:6px 4px;border-bottom:1px solid var(--line);">${fmtDate(e.date)}</td>
+            <td style="padding:6px 4px;border-bottom:1px solid var(--line);">${escapeHtml(e.invoice||'')}</td>
+            <td style="padding:6px 4px;border-bottom:1px solid var(--line);">${escapeHtml(it.description||'-')}</td>
+            <td style="padding:6px 4px;border-bottom:1px solid var(--line);text-align:center;">${it.qty}</td>
+            <td style="padding:6px 4px;border-bottom:1px solid var(--line);text-align:right;">${fmtMoney(it.unitPrice)}</td>
+            <td style="padding:6px 4px;border-bottom:1px solid var(--line);text-align:right;font-weight:600;">${fmtMoney(lineTotal)}</td>
+          </tr>`);
+      });
+    }else{
+      const amt = Number(e.amount) || 0;
+      grandTotal += amt;
+      rows.push(`
+        <tr>
+          <td style="padding:6px 4px;border-bottom:1px solid var(--line);">${fmtDate(e.date)}</td>
+          <td style="padding:6px 4px;border-bottom:1px solid var(--line);">${escapeHtml(e.invoice||'')}</td>
+          <td style="padding:6px 4px;border-bottom:1px solid var(--line); color:var(--muted); font-style:italic;" colspan="3">No item breakdown</td>
+          <td style="padding:6px 4px;border-bottom:1px solid var(--line);text-align:right;font-weight:600;">${fmtMoney(amt)}</td>
+        </tr>`);
+    }
+  });
+
+  list.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:13px; min-width:560px;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--ink); font-weight:700; text-align:left;">
+            <th style="padding:6px 4px;">Date</th>
+            <th style="padding:6px 4px;">Invoice</th>
+            <th style="padding:6px 4px;">Item</th>
+            <th style="padding:6px 4px;text-align:center;">Qty</th>
+            <th style="padding:6px 4px;text-align:right;">Unit price</th>
+            <th style="padding:6px 4px;text-align:right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>${rows.join('')}</tbody>
+      </table>
+    </div>
+    <div style="text-align:right; font-weight:700; font-size:15px; margin-top:12px; padding-top:10px; border-top:2px solid var(--ink);">
+      Grand total: ${fmtMoney(grandTotal)}
+    </div>
+  `;
 }
 function getEntryMonths(entries){
   const keys = new Set(entries.map(e => monthKey(e.date)));
