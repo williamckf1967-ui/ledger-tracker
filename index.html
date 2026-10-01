@@ -1190,6 +1190,18 @@ function computeInvoiceNumber(dateStr){
   return prefix + pad3(maxSeq + 1);
 }
 
+function defaultDateForNewEntry(){
+  const today = new Date();
+  const todayKey = today.getFullYear() + '-' + pad2(today.getMonth()+1);
+  // If the month tab currently being viewed is the real current month, use today's actual date.
+  if(!state.selectedMonth || state.selectedMonth === todayKey){
+    return today.toISOString().slice(0,10);
+  }
+  // Otherwise default to the 1st of whichever month is selected, so new entries land in that month.
+  const [yyyy, mm] = state.selectedMonth.split('-').map(Number);
+  return `${yyyy}-${pad2(mm)}-01`;
+}
+
 function autofillInvoiceNumber(){
   // Only auto-generate for new entries; don't overwrite a saved invoice while editing.
   if(state.editingEntryId) return;
@@ -1325,7 +1337,7 @@ function openEntryForm(entryId){
     document.getElementById('entryFormTitle').textContent = 'Add entry';
     document.getElementById('fDealer').value = '';
     document.getElementById('fInvoice').value = '';
-    document.getElementById('fDate').value = new Date().toISOString().slice(0,10);
+    document.getElementById('fDate').value = defaultDateForNewEntry();
     document.getElementById('fAmount').value = '';
     document.getElementById('fProfit').value = '';
     state.chipDealerPaid = false;
