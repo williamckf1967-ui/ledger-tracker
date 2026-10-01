@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SV Advance Technology - Dealer WhatsApp Sender</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.container{max-width:900px;margin:auto;padding:12px}.header{background:#111827;color:#fff;border-radius:18px;padding:20px;margin-bottom:14px}.header h1{margin:0 0 5px;font-size:24px}.header p{margin:0;color:#cbd5e1}.card{background:#fff;border:1px solid #dbe3ec;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 2px 8px #0000000a}h2{font-size:20px;margin:0 0 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label.field{font-weight:600;font-size:14px;display:block;margin-bottom:6px}input[type=text],input[type=date],input[type=time],input[type=file],textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:11px;font-size:16px;background:#fff}textarea{min-height:125px;resize:vertical}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}button{border:0;border-radius:11px;padding:12px 15px;min-height:44px;font-size:15px;font-weight:700;cursor:pointer}.primary{background:#2563eb;color:#fff}.whatsapp{background:#16a34a;color:#fff}.secondary{background:#e2e8f0;color:#17202a}.danger{background:#fee2e2;color:#991b1b}.full{width:100%}.dealer-row{display:flex;align-items:center;gap:12px;padding:14px 10px;border:1px solid #e2e8f0;border-radius:12px;margin:8px 0;background:#fafcff;cursor:pointer}.dealer-row.selected{border-color:#2563eb;background:#eff6ff}.dealer-row input{width:22px;height:22px;flex:0 0 auto}.dealer-name{font-weight:700}.dealer-info{font-size:13px;color:#64748b;margin-top:3px}.summary{padding:13px;background:#eff6ff;border-radius:11px;color:#1e40af;font-weight:600;margin-top:12px}.small{font-size:13px;color:#64748b}.note{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:11px;padding:12px;margin-bottom:12px}.success{background:#ecfdf5;border:1px solid #a7f3d0;color:#166534;border-radius:11px;padding:12px;margin-bottom:12px}.history{padding:13px;background:#f8fafc;border-radius:11px;margin-top:10px;border:1px solid #e2e8f0}.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:12px;font-weight:700;margin-top:6px}.queue-row{padding:12px;border:1px solid #e2e8f0;border-radius:12px;margin:8px 0}.queue-row.done{background:#ecfdf5;border-color:#a7f3d0}.queue-row.active{background:#eff6ff;border-color:#93c5fd}.queue-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.status{font-size:12px;font-weight:700;color:#64748b}.hidden{display:none!important}.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:flex-end;justify-content:center;padding:12px;z-index:999}.modal-card{background:#fff;width:100%;max-width:520px;border-radius:18px;padding:20px;box-shadow:0 10px 40px #0004}.modal-card h3{margin:0 0 14px}.modal-card input{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:11px;font-size:16px;margin:6px 0 12px}.modal-actions{display:flex;gap:8px}.modal-actions button{flex:1}#contactFile{display:none}@media(max-width:650px){.grid{grid-template-columns:1fr}.container{padding:10px}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header"><h1>SV Advance Technology</h1><p>Dealer Price List Sender — WhatsApp (No API) • iPhone</p></div>
+
+<div class="success"><strong>How this version works:</strong> select dealers → choose your price list → tap <strong>Open WhatsApp</strong> → attach the price-list photo/PDF in WhatsApp → tap Send. This version intentionally uses the reliable manual-attachment method. Your existing normal WhatsApp number can be used — no API required.</div>
+
+<div class="card">
+<h2>1. Price List</h2>
+<div class="grid">
+<div><label class="field">Price List Name</label><input id="priceName" type="text" value="October 2026 Price List"></div>
+<div><label class="field">Attach Price List</label><input id="priceFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls"></div>
+</div><br>
+<label class="field">WhatsApp Message</label>
+<textarea id="message">📢 SV Advance Technology
+
+Dear Dealer,
+
+Please find attached our latest October 2026 price list.
+
+For orders or enquiries, please contact us.
+
+Thank you for your support.</textarea>
+<p class="small"><strong>Important:</strong> The file is only selected in this app. WhatsApp requires you to attach the photo/PDF yourself before tapping Send.</p>
+</div>
+
+<div class="card">
+<h2>2. Select Dealers</h2>
+<div class="note"><strong>iPhone contacts:</strong> Safari cannot directly read your iPhone Contacts database. Use <strong>Import iPhone Contacts</strong> to import a .vcf/vCard file, or add a dealer manually.</div>
+<div class="actions">
+<button type="button" class="primary" id="importBtn">📱 Import iPhone Contacts</button>
+<input id="contactFile" type="file" accept=".vcf,text/vcard">
+<button type="button" class="secondary" id="addBtn">＋ Add Dealer</button>
+<div id="addDealerPanel" style="display:none;margin:12px 0;padding:14px;border:2px solid #2563eb;border-radius:14px;background:#eff6ff">
+<label class="field">Dealer Name</label><input id="newDealerNameInline" type="text" placeholder="e.g. ABC Computer" autocomplete="organization" style="width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:11px;font-size:16px;margin:6px 0 10px">
+<label class="field">WhatsApp Number</label><input id="newDealerPhoneInline" type="tel" placeholder="e.g. 0123456789" autocomplete="tel" style="width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:11px;font-size:16px;margin:6px 0 10px">
+<div class="actions"><button type="button" class="primary" id="saveDealerInline">Save Dealer</button><button type="button" class="secondary" id="cancelDealerInline">Cancel</button></div></div>
+<button type="button" class="secondary" id="selectAll">Select All</button>
+<button type="button" class="secondary" id="clearAll">Clear Selection</button>
+</div>
+<div id="dealers"></div>
+<div class="summary" id="summary">0 dealers selected</div>
+</div>
+
+<div class="card">
+<h2>3. Schedule / Send with WhatsApp</h2>
+<div class="grid">
+<div><label class="field">Planned Date</label><input id="sendDate" type="date"></div>
+<div><label class="field">Planned Time</label><input id="sendTime" type="time" value="08:30"></div>
+</div><br>
+<div class="actions">
+<button type="button" class="primary" id="schedule">Save WhatsApp Campaign</button>
+<button type="button" class="whatsapp" id="startNow">💬 Send with WhatsApp Now</button>
+</div>
+<div class="note"><strong>Reliable iPhone method:</strong> tap <strong>Open WhatsApp — Next Dealer</strong>. WhatsApp opens with the dealer and message. Then tap <strong>＋ / 📎 → Photos or Document</strong>, select your price list, and tap <strong>Send</strong>. The app will never claim the photo was sent automatically.</div>
+</div>
+
+<div class="card">
+<h2>4. Sending Queue</h2><div class="success"><strong>One dealer at a time:</strong> Open WhatsApp → attach the price-list photo/PDF → check the attachment → Send → return here → Mark as Sent.</div>
+<div id="queueEmpty" class="small">No active sending queue. Select dealers and tap “Send with WhatsApp Now”, or save a campaign first.</div>
+<div id="queue"></div>
+<div id="queueControls" class="actions hidden">
+<button type="button" class="whatsapp" id="openNext">💬 Open WhatsApp — Next Dealer</button>
+<button type="button" class="secondary" id="markSent">✓ Mark Current as Sent</button>
+<button type="button" class="secondary" id="skipCurrent">Skip Current</button>
+</div>
+</div>
+
+<div class="card">
+<h2>5. Campaign History</h2>
+<div id="history"><div class="small">No campaigns saved yet.</div></div>
+</div>
+
+<div class="card">
+<h2>6. WhatsApp — No API Required</h2>
+<div class="success"><strong>✓ Connected method: your normal WhatsApp app</strong><br>
+This version does <strong>not</strong> use WhatsApp Business API. It opens each dealer's WhatsApp chat with your message already filled in.</div>
+<p class="small"><strong>How sending works:</strong></p>
+<ol class="small" style="line-height:1.7;padding-left:22px">
+<li>Select your dealers.</li>
+<li>Tap <strong>Send with WhatsApp Now</strong>.</li>
+<li>Tap <strong>Open WhatsApp — Next Dealer</strong>.</li>
+<li>In WhatsApp, tap <strong>＋ / 📎</strong> and attach the price-list photo/PDF.</li>
+<li>Check the attachment is visible, then tap <strong>Send</strong>.</li>
+<li>Return to this app and tap <strong>Mark as Sent</strong> to move to the next dealer.</li>
+<li>Return here and tap <strong>Mark Current as Sent</strong> to continue to the next dealer.</li>
+</ol>
+<div class="note"><strong>Important:</strong> No API is used. The selected file is not automatically attached. You must attach it inside WhatsApp, check it is visible, and tap Send. Your existing normal WhatsApp number can remain unchanged.</div>
+<span class="badge" style="background:#dcfce7;color:#166534">WhatsApp API: NOT REQUIRED</span>
+</div>
+</div>
+
+<div id="dealerModal" class="modal hidden" aria-hidden="true">
+  <div class="modal-card">
+    <h3>＋ Add Dealer</h3>
+    <label class="field">Dealer Name</label>
+    <input id="newDealerName" type="text" placeholder="e.g. ABC Computer" autocomplete="organization">
+    <label class="field">WhatsApp Number</label>
+    <input id="newDealerPhone" type="tel" placeholder="e.g. 0123456789 or +60123456789" autocomplete="tel">
+    <div class="modal-actions">
+      <button type="button" class="secondary" id="cancelDealer">Cancel</button>
+      <button type="button" class="primary" id="saveDealer">Save Dealer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+let dealers=[
+{name:"Dealer 001",phone:"+60120000001",group:"Kuala Lumpur"},
+{name:"Dealer 002",phone:"+60120000002",group:"Selangor"},
+{name:"Dealer 003",phone:"+60120000003",group:"Selangor"},
+{name:"Dealer 004",phone:"+60120000004",group:"Kuala Lumpur"},
+{name:"Dealer 005",phone:"+60120000005",group:"Other"}
+];
+try{const savedDealers=JSON.parse(localStorage.getItem("svDealers")||"null");if(Array.isArray(savedDealers)&&savedDealers.length)dealers=savedDealers;}catch(e){}
+let queue=[];let currentIndex=0;
+const box=document.getElementById("dealers"),summary=document.getElementById("summary"),history=document.getElementById("history"),queueBox=document.getElementById("queue"),queueEmpty=document.getElementById("queueEmpty"),queueControls=document.getElementById("queueControls");
+const date=document.getElementById("sendDate"),contactFile=document.getElementById("contactFile");
+const now=new Date();date.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+
+function render(){
+box.innerHTML="";
+dealers.forEach((d,i)=>{
+const label=document.createElement("label");label.className="dealer-row";
+label.innerHTML='<input type="checkbox" class="dealer-check"><span><span class="dealer-name"></span><br><span class="dealer-info"></span></span>';
+label.querySelector(".dealer-name").textContent=d.name;
+label.querySelector(".dealer-info").textContent=d.phone+(d.group?" · "+d.group:"");
+label.querySelector("input").dataset.index=i;
+label.querySelector("input").addEventListener("change",update);
+box.appendChild(label);
+});update();
+}
+function update(){let count=0;box.querySelectorAll(".dealer-check").forEach(x=>{if(x.checked){count++;x.closest(".dealer-row").classList.add("selected")}else x.closest(".dealer-row").classList.remove("selected")});summary.textContent=count+" dealer"+(count===1?"":"s")+" selected";}
+function selected(){return [...box.querySelectorAll(".dealer-check:checked")].map(x=>dealers[Number(x.dataset.index)]);}
+document.getElementById("selectAll").onclick=()=>{box.querySelectorAll(".dealer-check").forEach(x=>x.checked=true);update()};
+document.getElementById("clearAll").onclick=()=>{box.querySelectorAll(".dealer-check").forEach(x=>x.checked=false);update()};
+document.getElementById("importBtn").onclick=()=>contactFile.click();
+
+function parseVCF(text){let out=[];text.split(/END:VCARD/i).forEach(card=>{let nm=card.match(/(?:^|\r?\n)FN(?:;[^:]*)?:([^\r\n]+)/i);let tels=[...card.matchAll(/(?:^|\r?\n)TEL(?:;[^:]*)?:([^\r\n]+)/gi)];if(nm&&tels.length)tels.forEach(m=>{let p=m[1].trim();if(p)out.push({name:nm[1].trim(),phone:p,group:"Imported Contact"})})});return out;}
+contactFile.addEventListener("change",()=>{const f=contactFile.files[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{const imported=parseVCF(String(reader.result));if(!imported.length){alert("No phone contacts were found in this vCard file.");return}let existing=new Set(dealers.map(x=>x.phone.replace(/\D/g,"")));let added=0;imported.forEach(x=>{let key=x.phone.replace(/\D/g,"");if(!existing.has(key)){dealers.push(x);existing.add(key);added++}});render();alert(added+" new contact(s) imported. Duplicate phone numbers were skipped.");};reader.readAsText(f)});
+
+const addPanel=document.getElementById("addDealerPanel");
+const newName=document.getElementById("newDealerNameInline");
+const newPhone=document.getElementById("newDealerPhoneInline");
+function closeAdd(){addPanel.style.display="none";newName.value="";newPhone.value="";}
+document.getElementById("addBtn").onclick=()=>{addPanel.style.display="block";setTimeout(()=>newName.focus(),100);};
+document.getElementById("cancelDealerInline").onclick=closeAdd;
+document.getElementById("saveDealerInline").onclick=()=>{
+ const name=newName.value.trim(), phone=newPhone.value.trim();
+ if(!name){alert("Please enter the dealer name");newName.focus();return;}
+ if(!phone){alert("Please enter the WhatsApp number");newPhone.focus();return;}
+ const digits=phone.replace(/\D/g,"");
+ if(digits.length<9){alert("Please enter a valid WhatsApp number, for example 0123456789");newPhone.focus();return;}
+ const exists=dealers.some(d=>d.phone.replace(/\D/g,"")===digits);
+ if(exists){alert("This WhatsApp number is already in the dealer list.");return;}
+ dealers.push({name,phone,group:"Manual"});
+ localStorage.setItem("svDealers",JSON.stringify(dealers));
+ closeAdd();render();alert(name+" added successfully. Tick the checkbox to select the dealer.");
+};
+newPhone.addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("saveDealerInline").click();});
+
+function normalizeMalaysiaPhone(phone){let p=String(phone||"").trim().replace(/[^0-9+]/g,"");if(p.startsWith("+"))p=p.slice(1);if(p.startsWith("00"))p=p.slice(2);if(p.startsWith("0"))p="60"+p.slice(1);return p;}
+function waLink(dealer){let text=document.getElementById("message").value.trim();let p=normalizeMalaysiaPhone(dealer.phone);return "https://wa.me/"+p+"?text="+encodeURIComponent(text);}
+function fileName(){const f=document.getElementById("priceFile").files[0];return f?f.name:"No file selected";}
+
+function buildQueue(){const a=selected();if(!a.length){alert("Please select at least one dealer.");return false}queue=a.map(d=>({dealer:d,status:"Pending"}));currentIndex=0;renderQueue();return true;}
+function renderQueue(){queueBox.innerHTML="";if(!queue.length){queueEmpty.classList.remove("hidden");queueControls.classList.add("hidden");return}queueEmpty.classList.add("hidden");queue.forEach((q,i)=>{const row=document.createElement("div");row.className="queue-row "+(i===currentIndex&&q.status==="Pending"?"active ":"")+(q.status==="Sent"?"done":"");row.innerHTML='<strong></strong><div class="small"></div><div class="status"></div><div class="queue-actions"></div>';row.querySelector("strong").textContent=(i+1)+". "+q.dealer.name;row.querySelector(".small").textContent=q.dealer.phone;row.querySelector(".status").textContent=q.status;queueBox.appendChild(row)});queueControls.classList.remove("hidden");updateQueueControls();}
+function updateQueueControls(){const q=queue[currentIndex];if(!q){document.getElementById("openNext").disabled=true;document.getElementById("markSent").disabled=true;document.getElementById("skipCurrent").disabled=true;return}let done=q.status!=="Pending";document.getElementById("openNext").disabled=done;document.getElementById("markSent").disabled=done;document.getElementById("skipCurrent").disabled=done;document.getElementById("openNext").textContent="💬 Open "+q.dealer.name+" in WhatsApp";}
+function moveNext(){let next=queue.findIndex((q,i)=>i>currentIndex&&q.status==="Pending");if(next<0)next=queue.findIndex(q=>q.status==="Pending");currentIndex=next<0?queue.length:next;renderQueue();}
+
+document.getElementById("startNow").onclick=()=>{if(buildQueue()){document.getElementById("openNext").scrollIntoView({behavior:"smooth",block:"center"});}};
+document.getElementById("openNext").onclick=()=>{const q=queue[currentIndex];if(!q)return;window.location.href=waLink(q.dealer);q.status="Opened";renderQueue();};
+document.getElementById("openNext").onclick=()=>{const q=queue[currentIndex];if(!q)return;window.location.href=waLink(q.dealer);q.status="Opened";renderQueue();};
+document.getElementById("markSent").onclick=()=>{const q=queue[currentIndex];if(!q)return;q.status="Sent";moveNext()};
+document.getElementById("skipCurrent").onclick=()=>{const q=queue[currentIndex];if(!q)return;q.status="Skipped";moveNext()};
+
+document.getElementById("schedule").onclick=()=>{const a=selected();if(!a.length){alert("Please select at least one dealer.");return}if(!date.value||!document.getElementById("sendTime").value){alert("Please select date and time.");return}const name=document.getElementById("priceName").value.trim();if(!name){alert("Please enter a price list name.");return}if(history.textContent.includes("No campaigns saved yet."))history.innerHTML="";const item=document.createElement("div");item.className="history";item.innerHTML="<strong></strong><br><span class='small'></span><br><span class='badge'>Saved — open this page at the planned time</span>";item.querySelector("strong").textContent=name;item.querySelector(".small").textContent="Planned: "+date.value+" at "+document.getElementById("sendTime").value+" · "+a.length+" dealers · "+fileName();history.prepend(item);localStorage.setItem("svCampaign",JSON.stringify({name:name,date:date.value,time:document.getElementById("sendTime").value,dealers:a,file:fileName()}));alert("Campaign saved. At the planned time, open this page and tap Send with WhatsApp Now.");};
+
+const saved=localStorage.getItem("svCampaign");if(saved){try{const c=JSON.parse(saved);const item=document.createElement("div");item.className="history";item.innerHTML="<strong></strong><br><span class='small'></span><br><span class='badge'>Previously saved</span>";item.querySelector("strong").textContent=c.name;item.querySelector(".small").textContent="Planned: "+c.date+" at "+c.time+" · "+(c.dealers||[]).length+" dealers · "+(c.file||"No file selected");history.innerHTML="";history.appendChild(item)}catch(e){}}
+render();
+})();
+</script>
+</body>
+</html>
