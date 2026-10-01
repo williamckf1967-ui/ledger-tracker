@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SV Advance Technology - Dealer Sender</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.container{max-width:900px;margin:auto;padding:12px}.header{background:#111827;color:#fff;border-radius:18px;padding:20px;margin-bottom:14px}
+.header h1{margin:0 0 5px;font-size:24px}.header p{margin:0;color:#cbd5e1}.card{background:#fff;border:1px solid #dbe3ec;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 2px 8px #0000000a}
+h2{font-size:20px;margin:0 0 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label.field{font-weight:600;font-size:14px;display:block;margin-bottom:6px}
+input[type=text],input[type=date],input[type=time],input[type=file],textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:11px;font-size:16px;background:#fff}
+textarea{min-height:125px;resize:vertical}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+button{border:0;border-radius:11px;padding:12px 15px;min-height:44px;font-size:15px;font-weight:700;cursor:pointer}
+.primary{background:#2563eb;color:#fff}.secondary{background:#e2e8f0;color:#17202a}.danger{background:#fee2e2;color:#991b1b}
+.full{width:100%}.dealer-row{display:flex;align-items:center;gap:12px;padding:14px 10px;border:1px solid #e2e8f0;border-radius:12px;margin:8px 0;background:#fafcff;cursor:pointer}
+.dealer-row.selected{border-color:#2563eb;background:#eff6ff}.dealer-row input{width:22px;height:22px;flex:0 0 auto}
+.dealer-name{font-weight:700}.dealer-info{font-size:13px;color:#64748b;margin-top:3px}.summary{padding:13px;background:#eff6ff;border-radius:11px;color:#1e40af;font-weight:600;margin-top:12px}
+.small{font-size:13px;color:#64748b}.note{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:11px;padding:12px;margin-bottom:12px}
+.history{padding:13px;background:#f8fafc;border-radius:11px;margin-top:10px;border:1px solid #e2e8f0}.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:12px;font-weight:700;margin-top:6px}
+#contactFile{display:none}@media(max-width:650px){.grid{grid-template-columns:1fr}.container{padding:10px}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header"><h1>SV Advance Technology</h1><p>Dealer Price List Sender & Scheduler</p></div>
+
+<div class="card">
+<h2>1. Price List</h2>
+<div class="grid">
+<div><label class="field">Price List Name</label><input id="priceName" type="text" value="October 2026 Price List"></div>
+<div><label class="field">Attach Price List</label><input id="priceFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls"></div>
+</div><br>
+<label class="field">WhatsApp Message</label>
+<textarea id="message">📢 SV Advance Technology
+
+Dear Dealer,
+
+Please find attached our latest October 2026 price list.
+
+For orders or enquiries, please contact us.
+
+Thank you for your support.</textarea>
+</div>
+
+<div class="card">
+<h2>2. Select Dealers</h2>
+<div class="note"><strong>iPhone contacts:</strong> A normal web page cannot directly read your iPhone Contacts database. Use <strong>Import Contacts</strong> below: export/share your contacts as a vCard (.vcf), and the app will add the names and phone numbers here. A future native iPhone app can request direct Contacts permission.</div>
+
+<div class="actions">
+<button type="button" class="primary" id="importBtn">📱 Import iPhone Contacts</button>
+<input id="contactFile" type="file" accept=".vcf,text/vcard">
+<button type="button" class="secondary" id="addBtn">＋ Add Dealer</button>
+<button type="button" class="secondary" id="selectAll">Select All</button>
+<button type="button" class="secondary" id="clearAll">Clear Selection</button>
+</div>
+
+<div id="dealers"></div>
+<div class="summary" id="summary">0 dealers selected</div>
+</div>
+
+<div class="card">
+<h2>3. Schedule Sending</h2>
+<div class="grid">
+<div><label class="field">Date</label><input id="sendDate" type="date"></div>
+<div><label class="field">Time</label><input id="sendTime" type="time" value="08:30"></div>
+</div><br>
+<button type="button" class="primary full" id="schedule">Schedule Price List</button>
+</div>
+
+<div class="card">
+<h2>4. Scheduled / Sending History</h2>
+<div id="history"><div class="small">No scheduled messages yet.</div></div>
+</div>
+
+<div class="card">
+<h2>5. WhatsApp Connection</h2>
+<p class="small">The dealer/contact management is ready. Actual automatic WhatsApp delivery will require WhatsApp Business Platform/API and a secure server.</p>
+<span class="badge">WhatsApp API: Not connected</span>
+</div>
+</div>
+
+<script>
+(function(){
+let dealers=[
+{name:"Dealer 001",phone:"+60120000001",group:"Kuala Lumpur"},
+{name:"Dealer 002",phone:"+60120000002",group:"Selangor"},
+{name:"Dealer 003",phone:"+60120000003",group:"Selangor"},
+{name:"Dealer 004",phone:"+60120000004",group:"Kuala Lumpur"},
+{name:"Dealer 005",phone:"+60120000005",group:"Other"}
+];
+const box=document.getElementById("dealers"),summary=document.getElementById("summary"),history=document.getElementById("history");
+const date=document.getElementById("sendDate");const contactFile=document.getElementById("contactFile");
+const now=new Date();date.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+
+function render(){
+box.innerHTML="";
+dealers.forEach((d,i)=>{
+const label=document.createElement("label");label.className="dealer-row";
+label.innerHTML='<input type="checkbox" class="dealer-check"><span><span class="dealer-name"></span><br><span class="dealer-info"></span></span>';
+label.querySelector(".dealer-name").textContent=d.name;
+label.querySelector(".dealer-info").textContent=d.phone+(d.group?" · "+d.group:"");
+label.querySelector("input").dataset.index=i;
+label.querySelector("input").addEventListener("change",update);
+box.appendChild(label);
+});
+update();
+}
+function update(){
+let count=0;box.querySelectorAll(".dealer-check").forEach(x=>{if(x.checked){count++;x.closest(".dealer-row").classList.add("selected")}else x.closest(".dealer-row").classList.remove("selected")});
+summary.textContent=count+" dealer"+(count===1?"":"s")+" selected";
+}
+function selected(){return [...box.querySelectorAll(".dealer-check:checked")].map(x=>dealers[Number(x.dataset.index)]);}
+document.getElementById("selectAll").onclick=()=>{box.querySelectorAll(".dealer-check").forEach(x=>x.checked=true);update()};
+document.getElementById("clearAll").onclick=()=>{box.querySelectorAll(".dealer-check").forEach(x=>x.checked=false);update()};
+document.getElementById("importBtn").onclick=()=>contactFile.click();
+
+function parseVCF(text){
+let out=[];let cards=text.split(/END:VCARD/i);
+cards.forEach(card=>{
+let nameMatch=card.match(/(?:^|\r?\n)FN(?:;[^:]*)?:([^\r\n]+)/i);
+let telMatches=[...card.matchAll(/(?:^|\r?\n)TEL(?:;[^:]*)?:([^\r\n]+)/gi)];
+if(nameMatch && telMatches.length){
+telMatches.forEach(m=>{let phone=m[1].trim();if(phone)out.push({name:nameMatch[1].trim(),phone:phone,group:"Imported Contact"})});
+}});
+return out;
+}
+contactFile.addEventListener("change",()=>{
+const f=contactFile.files[0];if(!f)return;
+const reader=new FileReader();
+reader.onload=()=>{const imported=parseVCF(String(reader.result));if(!imported.length){alert("No phone contacts were found in this vCard file.");return}
+let existing=new Set(dealers.map(x=>x.phone.replace(/\D/g,"")));imported.forEach(x=>{let key=x.phone.replace(/\D/g,"");if(!existing.has(key)){dealers.push(x);existing.add(key)}});render();alert(imported.length+" contact entries imported. Duplicate phone numbers were skipped.");};
+reader.readAsText(f);
+});
+
+document.getElementById("addBtn").onclick=()=>{
+const name=prompt("Dealer name:");if(!name)return;
+const phone=prompt("WhatsApp phone number, e.g. +60123456789:");if(!phone)return;
+dealers.push({name:name.trim(),phone:phone.trim(),group:"Manual"});render();
+};
+
+document.getElementById("schedule").onclick=()=>{
+const a=selected();if(!a.length){alert("Please select at least one dealer.");return}
+if(!date.value||!document.getElementById("sendTime").value){alert("Please select date and time.");return}
+const name=document.getElementById("priceName").value.trim();if(!name){alert("Please enter a price list name.");return}
+const file=document.getElementById("priceFile").files[0];
+if(history.textContent.includes("No scheduled messages yet."))history.innerHTML="";
+const item=document.createElement("div");item.className="history";
+item.innerHTML="<strong></strong><br><span class='small'></span><br><span class='badge'>Waiting for WhatsApp API</span>";
+item.querySelector("strong").textContent=name;
+item.querySelector(".small").textContent="Scheduled: "+date.value+" at "+document.getElementById("sendTime").value+" · "+a.length+" dealers"+(file?" · "+file.name:"");
+history.prepend(item);summary.textContent="Price list scheduled successfully for "+a.length+" dealers.";
+};
+render();
+})();
+</script>
+</body>
+</html>
