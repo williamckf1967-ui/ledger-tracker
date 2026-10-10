@@ -833,6 +833,7 @@ let state = {
   view: 'ledger',
   filter: 'all',
   selectedMonth: null,
+  selectedExactDate: null,
   editingEntryId: null,
   chipDealerPaid: false,
   chipComPaid: false,
@@ -1080,7 +1081,7 @@ function renderMonths(){
     btn.textContent = monthLabel(m);
     btn.onclick = isActive
       ? ()=>{ openMonthPicker(); }
-      : ()=>{ state.selectedMonth = m; setFilter('dealer_unpaid'); };
+      : ()=>{ state.selectedMonth = m; state.selectedExactDate = null; setFilter('dealer_unpaid'); };
     row.appendChild(btn);
   });
 }
@@ -1108,7 +1109,13 @@ function onMonthPicked(){
   const value = document.getElementById('monthPicker').value; // "YYYY-MM-DD"
   if(!value) return;
   state.selectedMonth = value.slice(0, 7); // "YYYY-MM"
+  state.selectedExactDate = value; // "YYYY-MM-DD"
   setFilter('dealer_unpaid');
+}
+
+function clearExactDate(){
+  state.selectedExactDate = null;
+  render();
 }
 
 function matchesFilter(entry){
@@ -1129,6 +1136,7 @@ function render(){
   const search = document.getElementById('searchInput').value.trim().toLowerCase();
   const entries = currentLedger().entries
     .filter(e => monthKey(e.date) === state.selectedMonth)
+    .filter(e => !state.selectedExactDate || e.date.slice(0,10) === state.selectedExactDate)
     .filter(matchesFilter)
     .filter(e => !search || e.dealer.toLowerCase().includes(search) || e.invoice.toLowerCase().includes(search))
     .sort((a,b)=> new Date(a.date) - new Date(b.date));
@@ -1140,7 +1148,13 @@ function render(){
 
   const [y,m] = state.selectedMonth.split('-').map(Number);
   const monthName = new Date(y,m-1,1).toLocaleString('en-US',{month:'long'});
-  document.getElementById('entriesMeta').textContent = `${entries.length} entries · ${monthName} ${y}`;
+  if(state.selectedExactDate){
+    document.getElementById('entriesMeta').innerHTML =
+      `${entries.length} entries · ${fmtDate(state.selectedExactDate)} ${y} ` +
+      `<button onclick="clearExactDate()" style="background:none;border:none;color:var(--green-700);font-weight:700;text-decoration:underline;padding:0 0 0 4px;">(show full month)</button>`;
+  }else{
+    document.getElementById('entriesMeta').textContent = `${entries.length} entries · ${monthName} ${y}`;
+  }
 
   const list = document.getElementById('entriesList');
   list.innerHTML = '';
